@@ -35,6 +35,9 @@ public extension Observer {
 public struct Store {
     private var spaces: [AnyMutator] = []
     
+    public init() {
+    }
+    
     mutating func add<S: State>(state: S) {
         spaces.append(AnyMutator(Space<S>(state: state)))
     }
