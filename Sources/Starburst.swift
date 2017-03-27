@@ -38,23 +38,23 @@ public struct Store {
     public init() {
     }
     
-    mutating func add<S: State>(state: S) {
+    public mutating func add<S: State>(state: S) {
         spaces.append(AnyMutator(Space<S>(state: state)))
     }
     
-    func add<R: Reducer>(reducer: R) {
+    public func add<R: Reducer>(reducer: R) {
         spaces.forEach { $0.add(reducer: reducer) }
     }
     
-    func dispatch(_ action: Action) {
+    public func dispatch(_ action: Action) {
         spaces.forEach { $0.dispatch(action) }
     }
     
-    func subscribe<O: Observer>(_ observer: O) {
+    public func subscribe<O: Observer>(_ observer: O) {
         spaces.forEach { $0.subscribe(observer) }
     }
     
-    func unsubscribe<O: Observer>(_ observer: O) {
+    public func unsubscribe<O: Observer>(_ observer: O) {
         spaces.forEach { $0.unsubscribe(observer) }
     }
 }
