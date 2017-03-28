@@ -58,7 +58,7 @@
 		F7F85C6E1E8A682200C8F32A /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		F7F85C6F1E8A682200C8F32A /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		F7F85C711E8A682200C8F32A /* Starburst.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Starburst.podspec; sourceTree = "<group>"; };
-		F7F85C761E8A688C00C8F32A /* en */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = en; path = en.lproj/README.md; sourceTree = "<group>"; };
+		F7F85C781E8A6A7600C8F32A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,9 +120,9 @@
 		52D6D9721BEFF229002C0205 = {
 			isa = PBXGroup;
 			children = (
+				F7F85C781E8A6A7600C8F32A /* README.md */,
 				F7F85C6E1E8A682200C8F32A /* LICENSE */,
 				F7F85C6F1E8A682200C8F32A /* Package.swift */,
-				F7F85C771E8A688C00C8F32A /* README.md */,
 				F7F85C711E8A682200C8F32A /* Starburst.podspec */,
 				52D6D9961BEFF375002C0205 /* Starburst.swift */,
 				52D6D9971BEFF375002C0205 /* StarburstTests.swift */,
@@ -521,17 +521,6 @@
 			targetProxy = DD7502931C690C7A006590AF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		F7F85C771E8A688C00C8F32A /* README.md */ = {
-			isa = PBXVariantGroup;
-			children = (
-				F7F85C761E8A688C00C8F32A /* en */,
-			);
-			name = README.md;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		52D6D98E1BEFF229002C0205 /* Debug */ = {
