@@ -4,13 +4,13 @@
 
 ``` swift
 struct StringState: State {
-typealias S = StringState
-let value: String
+  typealias S = StringState
+  let value: String
 }
 
 struct IntState: State {
-typealias A = IntAction
-let value: Int
+  typealias A = IntAction
+  let value: Int
 }
 ```
 
@@ -26,19 +26,19 @@ enum IntAction: Action { case add(Int) }
 
 ``` swift
 struct StringReducer: Reducer {
-func reduce(state: inout StringState, action: StringAction) -> StringState? {
-switch action {
-case .add(let v): return StringState(value: state.value + v)
-}
-}
+  func reduce(state: inout StringState, action: StringAction) -> StringState? {
+    switch action {
+    case .add(let v): return StringState(value: state.value + v)
+    }
+  }
 }
 
 struct IntReducer: Reducer {
-func reduce(state: inout IntState, action: IntAction) -> IntState? {
-switch action {
-case .add(let v): return IntState(value: state.value + v)
-}
-}
+  func reduce(state: inout IntState, action: IntAction) -> IntState? {
+    switch action {
+    case .add(let v): return IntState(value: state.value + v)
+    }
+  }
 }
 ```
 
@@ -46,17 +46,17 @@ case .add(let v): return IntState(value: state.value + v)
 
 ``` swift
 struct StringObserver: Observer {
-let token: Observer.Token = UUID()
-func newState(_ state: StringState) {
-print("New state is \(state.value)")
-}
+  let token: Observer.Token = UUID()
+  func newState(_ state: StringState) {
+    print("New state is \(state.value)")
+  }
 }
 
 struct IntObserver: Observer {
-let token: Observer.Token = UUID()
-func newState(_ state: IntState) {
-print("New state is \(state.value)")
-}
+  let token: Observer.Token = UUID()
+  func newState(_ state: IntState) {
+    print("New state is \(state.value)")
+  }
 }
 ```
 
