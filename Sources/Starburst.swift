@@ -22,18 +22,20 @@ public enum Priority: Int {
 }
 public struct Store {
     private var spaces: [AnyMutator] = []
-    
-    mutating func add<S: State>(state: S) {
+
+    public init() {
+    }
+    public mutating func add<S: State>(state: S) {
         spaces.append(AnyMutator(Space<S>(state: state)))
     }
-    func add<S: State>(reducer: @escaping Reducer<S>) {
+    public func add<S: State>(reducer: @escaping Reducer<S>) {
         spaces.forEach { $0.add(reducer: reducer) }
     }
-    func dispatch(_ action: Action) {
+    public func dispatch(_ action: Action) {
         spaces.forEach { $0.dispatch(action) }
     }
     @discardableResult
-    func subscribe<S: State>(priority: Priority = .normal, _ observer: @escaping Observer<S>) -> Token? {
+    public func subscribe<S: State>(priority: Priority = .normal, _ observer: @escaping Observer<S>) -> Token? {
         var token: Token? = nil
         spaces.forEach {
             if let t = $0.subscribe(priority, observer) {
@@ -42,7 +44,7 @@ public struct Store {
         }
         return token
     }
-    func unsubscribe(token: Token?) {
+    public func unsubscribe(token: Token?) {
         if let token = token {
             spaces.forEach { $0.unsubscribe(token: token) }
         }
