@@ -12,94 +12,82 @@ public protocol State {
     associatedtype A: Action
 }
 public protocol Action {}
-public protocol Reducer {
-    associatedtype S: State
-    func reduce(state: inout S, action: S.A) -> S?
-}
-public enum ObserverPriority: Int {
+public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) -> S?
+public typealias Observer<S: State> = (_ state: S) -> Void
+public typealias Token = UUID
+public enum Priority: Int {
     case high = 0
     case normal = 20
     case low = 50
 }
-public protocol Observer {
-    typealias Token = UUID
-    var token: Token { get }
-    var priority: ObserverPriority { get }
-    
-    associatedtype S: State
-    func newState(_ state: S)
-}
-public extension Observer {
-    var priority: ObserverPriority { return .normal }
-}
 public struct Store {
     private var spaces: [AnyMutator] = []
     
-    public init() {
-    }
-    
-    public mutating func add<S: State>(state: S) {
+    mutating func add<S: State>(state: S) {
         spaces.append(AnyMutator(Space<S>(state: state)))
     }
-    
-    public func add<R: Reducer>(reducer: R) {
+    func add<S: State>(reducer: @escaping Reducer<S>) {
         spaces.forEach { $0.add(reducer: reducer) }
     }
-    
-    public func dispatch(_ action: Action) {
+    func dispatch(_ action: Action) {
         spaces.forEach { $0.dispatch(action) }
     }
-    
-    public func subscribe<O: Observer>(_ observer: O) {
-        spaces.forEach { $0.subscribe(observer) }
+    @discardableResult
+    func subscribe<S: State>(priority: Priority = .normal, _ observer: @escaping Observer<S>) -> Token? {
+        var token: Token? = nil
+        spaces.forEach {
+            if let t = $0.subscribe(priority, observer) {
+                token = t
+            }
+        }
+        return token
     }
-    
-    public func unsubscribe<O: Observer>(_ observer: O) {
-        spaces.forEach { $0.unsubscribe(observer) }
+    func unsubscribe(token: Token?) {
+        if let token = token {
+            spaces.forEach { $0.unsubscribe(token: token) }
+        }
     }
 }
 
 // PRIVATE
 
-private struct AnyReducer<S: State>: Reducer {
-    init<R: Reducer>(_ reducer: R) where R.S == S {
-        box = reducer.reduce
+private struct AnyReducer<S: State> {
+    init(_ reducer: @escaping Reducer<S>) {
+        box = reducer
     }
     func reduce(state: inout S, action: S.A) -> S? {
         return box(&state, action)
     }
     private let box: (inout S, S.A) -> S?
 }
-private struct AnyObserver<S: State>: Observer, Equatable {
-    let token: Observer.Token
-    var priority: ObserverPriority { return priorityBox() }
+private struct AnyObserver<S: State>: Equatable {
+    let token: Token = UUID()
+    let priority: Priority
     
-    init<O: Observer>(_ observer: O) where O.S == S {
-        token = observer.token
-        stateBox = observer.newState
-        priorityBox = { observer.priority }
+    init(_ priority: Priority, _ observer: @escaping Observer<S>) {
+        self.priority = priority
+        box = observer
     }
     func newState(_ state: S) {
-        stateBox(state)
+        box(state)
     }
     public static func ==(lhs: AnyObserver, rhs: AnyObserver) -> Bool {
         return lhs.token == rhs.token
     }
-    private let stateBox: (S) -> Void
-    private let priorityBox: () -> ObserverPriority
+    private let box: (S) -> ()
 }
 private protocol Mutator: class {
     associatedtype S: State
-    func add<R: Reducer>(reducer: R) where R.S == S
+    func add(reducer: @escaping Reducer<S>)
     func dispatch(_ action: S.A)
-    func subscribe<O: Observer>(_ observer: O) where O.S == S
-    func unsubscribe<O: Observer>(_ observer: O) where O.S == S
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token
+    func unsubscribe(token: Token)
 }
 private struct AnyMutator {
     init<M: Mutator>(_ mutator: M) {
         addBox = { reducer in
             if let reducer = reducer as? AnyReducer<M.S> {
-                mutator.add(reducer: reducer)
+                mutator.add(reducer: reducer.reduce)
             }
         }
         dispatchBox = { action in
@@ -109,31 +97,30 @@ private struct AnyMutator {
         }
         subscribeBox = { observer in
             if let observer = observer as? AnyObserver<M.S> {
-                mutator.subscribe(observer)
+                return mutator.subscribe(observer.priority, observer.newState)
             }
+            return nil
         }
-        unsubscribeBox = { observer in
-            if let observer = observer as? AnyObserver<M.S> {
-                mutator.unsubscribe(observer)
-            }
+        unsubscribeBox = { token in
+            mutator.unsubscribe(token: token)
         }
     }
-    func add<R: Reducer>(reducer: R) {
-        addBox(AnyReducer<R.S>(reducer))
+    func add<S: State>(reducer: @escaping Reducer<S>) {
+        addBox(AnyReducer<S>(reducer))
     }
     func dispatch(_ action: Action) {
         dispatchBox(action)
     }
-    func subscribe<O: Observer>(_ observer: O) {
-        subscribeBox(AnyObserver<O.S>(observer))
+    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token? {
+        return subscribeBox(AnyObserver<S>(priority, observer))
     }
-    func unsubscribe<O: Observer>(_ observer: O) {
-        unsubscribeBox(AnyObserver<O.S>(observer))
+    func unsubscribe(token: Token) {
+        unsubscribeBox(token)
     }
-    private let addBox: (Any) -> ()
-    private let dispatchBox: (Action) -> ()
-    private let subscribeBox: (Any) -> ()
-    private let unsubscribeBox: (Any) -> ()
+    private let addBox: (Any) -> Void
+    private let dispatchBox: (Action) -> Void
+    private let subscribeBox: (Any) -> Token?
+    private let unsubscribeBox: (Token) -> Void
 }
 private class Space<TS: State>: Mutator {
     typealias S = TS
@@ -145,11 +132,9 @@ private class Space<TS: State>: Mutator {
     init(state: S) {
         self.state = state
     }
-    
-    func add<R: Reducer>(reducer: R) where R.S == S {
+    func add(reducer: @escaping Reducer<S>) {
         reducers.append(AnyReducer<S>(reducer))
     }
-    
     func dispatch(_ action: S.A) {
         reducers.forEach { reducer in
             if let s = reducer.reduce(state: &state, action: action) {
@@ -158,16 +143,17 @@ private class Space<TS: State>: Mutator {
             }
         }
     }
-    
-    func subscribe<O: Observer>(_ observer: O) where O.S == S {
-        observers.append(AnyObserver<S>(observer))
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token {
+        let obs = AnyObserver<S>(priority, observer)
+        observers.append(obs)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
-        observer.newState(state)
+        return obs.token
     }
-    
-    func unsubscribe<O: Observer>(_ observer: O) where O.S == S {
-        if let index = observers.index(of: AnyObserver<S>(observer)) {
-            observers.remove(at: index)
+    func unsubscribe(token: Token) {
+        if let match = observers.first(where: { $0.token == token }) {
+            if let index = observers.index(of: match) {
+                observers.remove(at: index)
+            }
         }
     }
 }
