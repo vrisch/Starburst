@@ -35,7 +35,7 @@ public struct Store {
         spaces.forEach { $0.dispatch(action) }
     }
     @discardableResult
-    public func subscribe<S: State>(priority: Priority = .normal, _ observer: @escaping Observer<S>) -> Token? {
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Token? {
         var token: Token? = nil
         spaces.forEach {
             if let t = $0.subscribe(priority, observer) {
@@ -149,6 +149,7 @@ private class Space<TS: State>: Mutator {
         let obs = AnyObserver<S>(priority, observer)
         observers.append(obs)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
+        observer(state)
         return obs.token
     }
     func unsubscribe(token: Token) {
