@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   DESC
   s.homepage     = "https://github.com/vrisch/Starburst"
   s.license      = { :type => "MIT", :file => "LICENSE" }
-  s.author             = { "Magnus Nilsson" => "magnus@vrischikasana.se" }
+  s.author             = { "Vrisch" => "magnus@vrischikasana.se" }
   s.social_media_url   = ""
   s.ios.deployment_target = "8.0"
   s.osx.deployment_target = "10.9"

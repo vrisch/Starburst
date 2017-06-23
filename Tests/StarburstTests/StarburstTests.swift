@@ -2,7 +2,7 @@
 //  StarburstTests.swift
 //  Starburst
 //
-//  Created by Magnus Nilsson on 2017-03-11.
+//  Created by Vrisch on {TODAY}.
 //  Copyright © 2017 Starburst. All rights reserved.
 //
 
@@ -16,14 +16,8 @@ class StarburstTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct results.
         //// XCTAssertEqual(Starburst().text, "Hello, World!")
     }
+    
+    static var allTests = [
+        ("testExample", testExample),
+    ]
 }
-
-#if os(Linux)
-extension StarburstTests {
-    static var allTests : [(String, (StarburstTests) -> () throws -> Void)] {
-        return [
-            ("testExample", testExample),
-        ]
-    }
-}
-#endif
