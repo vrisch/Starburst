@@ -8,15 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		52D6D9871BEFF229002C0205 /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D97C1BEFF229002C0205 /* Starburst.framework */; };
-		52D6D9981BEFF375002C0205 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9961BEFF375002C0205 /* Starburst.swift */; };
-		52D6D99B1BEFF375002C0205 /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9971BEFF375002C0205 /* StarburstTests.swift */; };
-		52D6D9EA1BEFFFA4002C0205 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9961BEFF375002C0205 /* Starburst.swift */; };
-		52D6DA091BF00081002C0205 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9961BEFF375002C0205 /* Starburst.swift */; };
-		52D6DA261BF00118002C0205 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9961BEFF375002C0205 /* Starburst.swift */; };
-		DD7502861C68FDDC006590AF /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9971BEFF375002C0205 /* StarburstTests.swift */; };
 		DD7502881C68FEDE006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6DA0F1BF000BD002C0205 /* Starburst.framework */; };
 		DD7502921C690C7A006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Starburst.framework */; };
-		DD75029A1C690CBE006590AF /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D6D9971BEFF375002C0205 /* StarburstTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,10 +37,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		30BE9CE31EFCF0F3007F878E /* Starburst.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Starburst.swift; sourceTree = "<group>"; };
+		30BE9CE51EFCF0F8007F878E /* LinuxMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinuxMain.swift; sourceTree = "<group>"; };
+		30BE9CE71EFCF0F8007F878E /* StarburstTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarburstTests.swift; sourceTree = "<group>"; };
 		52D6D97C1BEFF229002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9861BEFF229002C0205 /* Starburst-iOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-iOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		52D6D9961BEFF375002C0205 /* Starburst.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Starburst.swift; path = Sources/Starburst.swift; sourceTree = "<group>"; };
-		52D6D9971BEFF375002C0205 /* StarburstTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StarburstTests.swift; path = Tests/StarburstTests/StarburstTests.swift; sourceTree = "<group>"; };
 		52D6D9E21BEFFF6E002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9F01BEFFFBE002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6DA0F1BF000BD002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,10 +49,6 @@
 		AD2FAA281CD0B6E100659CF4 /* StarburstTests.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = StarburstTests.plist; sourceTree = "<group>"; };
 		DD75027A1C68FCFC006590AF /* Starburst-macOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-macOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD75028D1C690C7A006590AF /* Starburst-tvOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-tvOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F7F85C6E1E8A682200C8F32A /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		F7F85C6F1E8A682200C8F32A /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		F7F85C711E8A682200C8F32A /* Starburst.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Starburst.podspec; sourceTree = "<group>"; };
-		F7F85C781E8A6A7600C8F32A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,15 +107,36 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		30BE9CE21EFCF0F3007F878E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				30BE9CE31EFCF0F3007F878E /* Starburst.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		30BE9CE41EFCF0F8007F878E /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				30BE9CE51EFCF0F8007F878E /* LinuxMain.swift */,
+				30BE9CE61EFCF0F8007F878E /* StarburstTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		30BE9CE61EFCF0F8007F878E /* StarburstTests */ = {
+			isa = PBXGroup;
+			children = (
+				30BE9CE71EFCF0F8007F878E /* StarburstTests.swift */,
+			);
+			path = StarburstTests;
+			sourceTree = "<group>";
+		};
 		52D6D9721BEFF229002C0205 = {
 			isa = PBXGroup;
 			children = (
-				F7F85C781E8A6A7600C8F32A /* README.md */,
-				F7F85C6E1E8A682200C8F32A /* LICENSE */,
-				F7F85C6F1E8A682200C8F32A /* Package.swift */,
-				F7F85C711E8A682200C8F32A /* Starburst.podspec */,
-				52D6D9961BEFF375002C0205 /* Starburst.swift */,
-				52D6D9971BEFF375002C0205 /* StarburstTests.swift */,
+				30BE9CE21EFCF0F3007F878E /* Sources */,
+				30BE9CE41EFCF0F8007F878E /* Tests */,
 				52D6D99C1BEFF38C002C0205 /* Configs */,
 				52D6D97D1BEFF229002C0205 /* Products */,
 			);
@@ -450,7 +461,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52D6D9981BEFF375002C0205 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -458,7 +468,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52D6D99B1BEFF375002C0205 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,7 +475,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52D6D9EA1BEFFFA4002C0205 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -474,7 +482,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52D6DA091BF00081002C0205 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -482,7 +489,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				52D6DA261BF00118002C0205 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,7 +496,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DD7502861C68FDDC006590AF /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,7 +503,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DD75029A1C690CBE006590AF /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
