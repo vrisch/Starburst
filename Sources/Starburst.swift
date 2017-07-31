@@ -19,7 +19,7 @@ public enum Reason {
     case modified
     case custom(String)
 
-    var isSubscribed: Bool {
+    public var isSubscribed: Bool {
         guard case .subscribed = self else { return false }
         return true
     }
