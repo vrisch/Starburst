@@ -18,6 +18,11 @@ public enum Reason {
     case subscribed
     case modified
     case custom(String)
+
+    var isSubscribed: Bool {
+        guard case .subscribed = self else { return false }
+        return true
+    }
 }
 
 public enum Reduction<S: State> {
