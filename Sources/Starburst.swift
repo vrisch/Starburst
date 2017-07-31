@@ -14,14 +14,21 @@ public protocol State {
 
 public protocol Action {}
 
+public enum Reason {
+    case subscribed
+    case modified
+    case custom(String)
+}
+
 public enum Reduction<S: State> {
     case unmodified
-    case modified(S)
+    case modified(newState: S)
+    case modified2(newState: S, reason: Reason)
 }
 
 public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) -> Reduction<S>
 
-public typealias Observer<S: State> = (_ state: S) -> Void
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) -> Void
 
 public typealias Token = UUID
 

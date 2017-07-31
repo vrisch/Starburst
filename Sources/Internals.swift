@@ -21,18 +21,18 @@ internal struct AnyReducer<S: State> {
 internal struct AnyObserver<S: State>: Equatable {
     let token: Token = UUID()
     let priority: Priority
-    
+
     init(_ priority: Priority, _ observer: @escaping Observer<S>) {
         self.priority = priority
         box = observer
     }
-    func newState(_ state: S) {
-        box(state)
+    func newState(state: S, reason: Reason) {
+        box(state, reason)
     }
     public static func ==(lhs: AnyObserver, rhs: AnyObserver) -> Bool {
         return lhs.token == rhs.token
     }
-    private let box: (S) -> ()
+    private let box: (S, Reason) -> ()
 }
 
 internal protocol Mutator: class {
@@ -99,9 +99,12 @@ internal class Space<TS: State>: Mutator {
     func dispatch(_ action: S.A) {
         reducers.forEach { reducer in
             let reduction = reducer.reduce(state: &state, action: action)
-            if case let .modified(s) = reduction {
-                state = s
-                observers.forEach { $0.newState(state) }
+            if case let .modified(newState) = reduction {
+                state = newState
+                observers.forEach { $0.newState(state: state, reason: .modified) }
+            } else if case let .modified2(newState, reason) = reduction {
+                state = newState
+                observers.forEach { $0.newState(state: state, reason: reason) }
             }
         }
     }
@@ -109,7 +112,7 @@ internal class Space<TS: State>: Mutator {
         let obs = AnyObserver<S>(priority, observer)
         observers.append(obs)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
-        observer(state)
+        observer(state, .subscribed)
         return obs.token
     }
     func unsubscribe(token: Token) {
