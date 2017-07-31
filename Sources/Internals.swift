@@ -8,6 +8,17 @@
 
 import Foundation
 
+extension Reason: CustomStringConvertible {
+
+    public var description: String {
+        switch self {
+        case .subscribed: return "subscribed"
+        case .modified: return "modified"
+        case let .custom(value): return "custom(\(value))"
+        }
+    }
+}
+
 internal struct AnyReducer<S: State> {
     init(_ reducer: @escaping Reducer<S>) {
         box = reducer
