@@ -37,7 +37,18 @@ public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) -> Reduct
 
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) -> Void
 
-public typealias Token = UUID
+public final class Token {
+    let uuid: UUID
+    let store: Store
+
+    init(uuid: UUID, store: Store) {
+        self.uuid = uuid
+        self.store = store
+    }
+    deinit {
+        store.unsubscribe(token: self)
+    }
+}
 
 public enum Priority: Int {
     case high = 0
@@ -67,8 +78,8 @@ public struct Store {
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Token? {
         var token: Token? = nil
         spaces.forEach {
-            if let t = $0.subscribe(priority, observer) {
-                token = t
+            if let uuid = $0.subscribe(priority, observer) {
+                token = Token(uuid: uuid, store: self)
             }
         }
         return token
@@ -76,7 +87,7 @@ public struct Store {
 
     public func unsubscribe(token: Token?) {
         if let token = token {
-            spaces.forEach { $0.unsubscribe(token: token) }
+            spaces.forEach { $0.unsubscribe(uuid: token.uuid) }
         }
     }
 

@@ -19,6 +19,10 @@ extension Reason: CustomStringConvertible {
     }
 }
 
+extension Token {
+}
+
+
 internal struct AnyReducer<S: State> {
     init(_ reducer: @escaping Reducer<S>) {
         box = reducer
@@ -30,7 +34,7 @@ internal struct AnyReducer<S: State> {
 }
 
 internal struct AnyObserver<S: State>: Equatable {
-    let token: Token = UUID()
+    let uuid = UUID()
     let priority: Priority
 
     init(_ priority: Priority, _ observer: @escaping Observer<S>) {
@@ -41,7 +45,7 @@ internal struct AnyObserver<S: State>: Equatable {
         box(state, reason)
     }
     public static func ==(lhs: AnyObserver, rhs: AnyObserver) -> Bool {
-        return lhs.token == rhs.token
+        return lhs.uuid == rhs.uuid
     }
     private let box: (S, Reason) -> ()
 }
@@ -50,8 +54,8 @@ internal protocol Mutator: class {
     associatedtype S: State
     func add(reducer: @escaping Reducer<S>)
     func dispatch(_ action: S.A)
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token
-    func unsubscribe(token: Token)
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
+    func unsubscribe(uuid: UUID)
 }
 
 internal struct AnyMutator {
@@ -72,8 +76,8 @@ internal struct AnyMutator {
             }
             return nil
         }
-        unsubscribeBox = { token in
-            mutator.unsubscribe(token: token)
+        unsubscribeBox = { uuid in
+            mutator.unsubscribe(uuid: uuid)
         }
     }
     func add<S>(reducer: @escaping Reducer<S>) {
@@ -82,16 +86,16 @@ internal struct AnyMutator {
     func dispatch(_ action: Action) {
         dispatchBox(action)
     }
-    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token? {
+    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID? {
         return subscribeBox(AnyObserver<S>(priority, observer))
     }
-    func unsubscribe(token: Token) {
-        unsubscribeBox(token)
+    func unsubscribe(uuid: UUID) {
+        unsubscribeBox(uuid)
     }
     private let addBox: (Any) -> Void
     private let dispatchBox: (Action) -> Void
-    private let subscribeBox: (Any) -> Token?
-    private let unsubscribeBox: (Token) -> Void
+    private let subscribeBox: (Any) -> UUID?
+    private let unsubscribeBox: (UUID) -> Void
 }
 
 internal class Space<TS: State>: Mutator {
@@ -119,15 +123,15 @@ internal class Space<TS: State>: Mutator {
             }
         }
     }
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> Token {
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID {
         let obs = AnyObserver<S>(priority, observer)
         observers.append(obs)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
         observer(state, .subscribed)
-        return obs.token
+        return obs.uuid
     }
-    func unsubscribe(token: Token) {
-        if let match = observers.first(where: { $0.token == token }) {
+    func unsubscribe(uuid: UUID) {
+        if let match = observers.first(where: { $0.uuid == uuid }) {
             if let index = observers.index(of: match) {
                 observers.remove(at: index)
             }
