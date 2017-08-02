@@ -100,18 +100,14 @@ public struct Tokens {
 
     public init() { }
 
-    public mutating func subscribe(_ subscription: () -> [Token?]) {
-        if count == 0 {
-            obs += subscription()
-        }
+    public mutating func once(_ subscriptions: () -> [Token?]) {
+        if count == 0 { obs += subscriptions() }
         count += 1
     }
-    
-    public mutating func unsubscribe() {
+
+    public mutating func done() {
         count -= 1
-        if count == 0 {
-            obs.forEach { $0?.store.unsubscribe(token: $0) }
-        }
+        if count == 0 { obs.removeAll() }
     }
 
     private var obs: [Token?] = []
