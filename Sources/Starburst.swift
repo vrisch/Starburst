@@ -59,8 +59,7 @@ public enum Priority: Int {
 public struct Store {
     private var spaces: [AnyMutator] = []
 
-    public init() {
-    }
+    public init() { }
 
     public mutating func add<S: State>(state: S) {
         spaces.append(AnyMutator(Space<S>(state: state)))
@@ -98,6 +97,9 @@ public struct Store {
 
 
 public struct Tokens {
+
+    public init() { }
+
     public mutating func subscribe(_ subscription: () -> [Token?]) {
         if count == 0 {
             obs += subscription()
