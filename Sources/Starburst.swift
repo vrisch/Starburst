@@ -96,3 +96,24 @@ public struct Store {
     }
 }
 
+
+public struct Tokens {
+    public mutating func subscribe(_ subscription: () -> [Token?]) {
+        if count == 0 {
+            obs += subscription()
+        }
+        count += 1
+    }
+    
+    public mutating func unsubscribe() {
+        count -= 1
+        if count == 0 {
+            obs.forEach { $0?.store.unsubscribe(token: $0) }
+        }
+    }
+
+    private var obs: [Token?] = []
+    private var count = 0
+}
+
+
