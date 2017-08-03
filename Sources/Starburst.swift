@@ -110,12 +110,16 @@ public struct Store {
 public struct Tokens {
     
     public init() { }
-    
+
+    public mutating func once(_ subscription: () -> Token) {
+        once { [subscription()] }
+    }
+
     public mutating func once(_ subscriptions: () -> [Token]) {
         if count == 0 { obs += subscriptions() }
         count += 1
     }
-    
+
     public mutating func done() {
         count -= 1
         if count == 0 { obs.removeAll() }
