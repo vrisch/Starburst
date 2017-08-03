@@ -39,7 +39,7 @@ public typealias Observer<S: State> = (_ state: S, _ reason: Reason) -> Void
 
 public final class Token {
     let uuid: UUID
-    let store: Store
+    var store: Store
 
     init(uuid: UUID, store: Store) {
         self.uuid = uuid
@@ -57,36 +57,46 @@ public enum Priority: Int {
 }
 
 public struct Store {
-    private var spaces: [AnyMutator] = []
+    private var spaces: [AnyShelf] = []
 
     public init() { }
 
-    public mutating func add<S: State>(state: S) {
-        spaces.append(AnyMutator(Space<S>(state: state)))
+    public mutating func add<S: State>(state: S) -> Token {
+        let any = AnyShelf(Storage<S>(state: state))
+        spaces.append(any)
+        return Token(uuid: any.uuid, store: self)
     }
 
-    public func add<S>(reducer: @escaping Reducer<S>) {
-        spaces.forEach { $0.add(reducer: reducer) }
+    public func add<S>(reducer: @escaping Reducer<S>) -> Token {
+        var token: Token? = nil
+        spaces.forEach {
+            if let uuid = $0.add(reducer: reducer) {
+                token = Token(uuid: uuid, store: self)
+            }
+        }
+        return token!
     }
 
     public func dispatch(_ action: Action) {
         spaces.forEach { $0.dispatch(action) }
     }
 
-    @discardableResult
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Token? {
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Token {
         var token: Token? = nil
         spaces.forEach {
             if let uuid = $0.subscribe(priority, observer) {
                 token = Token(uuid: uuid, store: self)
             }
         }
-        return token
+        return token!
     }
 
-    public func unsubscribe(token: Token?) {
-        if let token = token {
-            spaces.forEach { $0.unsubscribe(uuid: token.uuid) }
+    public mutating func unsubscribe(token: Token) {
+        spaces.forEach { $0.unsubscribe(uuid: token.uuid) }
+        spaces.enumerated().forEach { let (index, any) = $0
+            if any.uuid == token.uuid {
+                spaces.remove(at: index)
+            }
         }
     }
 
@@ -100,7 +110,7 @@ public struct Tokens {
 
     public init() { }
 
-    public mutating func once(_ subscriptions: () -> [Token?]) {
+    public mutating func once(_ subscriptions: () -> [Token]) {
         if count == 0 { obs += subscriptions() }
         count += 1
     }
@@ -110,7 +120,7 @@ public struct Tokens {
         if count == 0 { obs.removeAll() }
     }
 
-    private var obs: [Token?] = []
+    private var obs: [Token] = []
     private var count = 0
 }
 

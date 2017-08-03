@@ -19,11 +19,9 @@ extension Reason: CustomStringConvertible {
     }
 }
 
-extension Token {
-}
-
-
 internal struct AnyReducer<S: State> {
+    let uuid = UUID()
+
     init(_ reducer: @escaping Reducer<S>) {
         box = reducer
     }
@@ -50,55 +48,63 @@ internal struct AnyObserver<S: State>: Equatable {
     private let box: (S, Reason) -> ()
 }
 
-internal protocol Mutator: class {
+internal protocol Shelf: class {
     associatedtype S: State
-    func add(reducer: @escaping Reducer<S>)
+    func add(reducer: @escaping Reducer<S>) -> UUID
     func dispatch(_ action: S.A)
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
     func unsubscribe(uuid: UUID)
 }
 
-internal struct AnyMutator {
-    init<M: Mutator>(_ mutator: M) {
+internal struct AnyShelf {
+    let uuid = UUID()
+
+    init<S: Shelf>(_ shelf: S) {
         addBox = { reducer in
-            if let reducer = reducer as? AnyReducer<M.S> {
-                mutator.add(reducer: reducer.reduce)
+            if let reducer = reducer as? AnyReducer<S.S> {
+                return shelf.add(reducer: reducer.reduce)
             }
+            return nil
         }
         dispatchBox = { action in
-            if let action = action as? M.S.A {
-                mutator.dispatch(action)
+            if let action = action as? S.S.A {
+                shelf.dispatch(action)
             }
         }
         subscribeBox = { observer in
-            if let observer = observer as? AnyObserver<M.S> {
-                return mutator.subscribe(observer.priority, observer.newState)
+            if let observer = observer as? AnyObserver<S.S> {
+                return shelf.subscribe(observer.priority, observer.newState)
             }
             return nil
         }
         unsubscribeBox = { uuid in
-            mutator.unsubscribe(uuid: uuid)
+            shelf.unsubscribe(uuid: uuid)
         }
     }
-    func add<S>(reducer: @escaping Reducer<S>) {
-        addBox(AnyReducer<S>(reducer))
+
+    func add<S>(reducer: @escaping Reducer<S>) -> UUID? {
+        return addBox(AnyReducer<S>(reducer))
     }
+
     func dispatch(_ action: Action) {
         dispatchBox(action)
     }
+
     func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID? {
         return subscribeBox(AnyObserver<S>(priority, observer))
     }
+
     func unsubscribe(uuid: UUID) {
         unsubscribeBox(uuid)
     }
-    private let addBox: (Any) -> Void
+
+    private let addBox: (Any) -> UUID?
     private let dispatchBox: (Action) -> Void
     private let subscribeBox: (Any) -> UUID?
     private let unsubscribeBox: (UUID) -> Void
 }
 
-internal class Space<TS: State>: Mutator {
+internal class Storage<TS: State>: Shelf {
     typealias S = TS
     
     var state: S
@@ -108,9 +114,13 @@ internal class Space<TS: State>: Mutator {
     init(state: S) {
         self.state = state
     }
-    func add(reducer: @escaping Reducer<S>) {
-        reducers.append(AnyReducer<S>(reducer))
+
+    func add(reducer: @escaping Reducer<S>) -> UUID {
+        let any = AnyReducer<S>(reducer)
+        reducers.append(any)
+        return any.uuid
     }
+
     func dispatch(_ action: S.A) {
         reducers.forEach { reducer in
             let reduction = reducer.reduce(state: &state, action: action)
@@ -123,17 +133,24 @@ internal class Space<TS: State>: Mutator {
             }
         }
     }
+
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID {
-        let obs = AnyObserver<S>(priority, observer)
-        observers.append(obs)
+        let any = AnyObserver<S>(priority, observer)
+        observers.append(any)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
         observer(state, .subscribed)
-        return obs.uuid
+        return any.uuid
     }
+
     func unsubscribe(uuid: UUID) {
-        if let match = observers.first(where: { $0.uuid == uuid }) {
-            if let index = observers.index(of: match) {
+        observers.enumerated().forEach { let (index, any) = $0
+            if any.uuid == uuid {
                 observers.remove(at: index)
+            }
+        }
+        reducers.enumerated().forEach { let (index, any) = $0
+            if any.uuid == uuid {
+                reducers.remove(at: index)
             }
         }
     }
