@@ -107,7 +107,6 @@ public struct Store {
     }
 }
 
-
 public struct Tokens {
     
     public init() { }
@@ -125,5 +124,3 @@ public struct Tokens {
     private var obs: [Token] = []
     private var count = 0
 }
-
-

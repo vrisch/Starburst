@@ -50,6 +50,7 @@ internal struct AnyObserver<S: State>: Equatable {
 
 internal protocol Shelf: class {
     associatedtype S: State
+
     func add(reducer: @escaping Reducer<S>) -> UUID
     func dispatch(_ action: S.A)
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
