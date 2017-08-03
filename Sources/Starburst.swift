@@ -99,6 +99,7 @@ public struct Store {
                     shelves.remove(at: index)
                 }
             }
+            print("TOKEN UNSUBSCRIBED")
         }
     }
     
