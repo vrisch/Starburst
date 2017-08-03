@@ -107,24 +107,25 @@ public struct Store {
     }
 }
 
-public struct Tokens {
+public final class Tokens {
     
     public init() { }
+    deinit { done() }
 
-    public mutating func once(_ subscription: () -> Token) {
+    public func once(_ subscription: () -> Token) {
         once { [subscription()] }
     }
 
-    public mutating func once(_ subscriptions: () -> [Token]) {
-        if count == 0 { obs += subscriptions() }
+    public func once(_ subscriptions: () -> [Token]) {
+        if count == 0 { tokens += subscriptions() }
         count += 1
     }
 
-    public mutating func done() {
+    public func done() {
         count -= 1
-        if count == 0 { obs.removeAll() }
+        if count == 0 { tokens.removeAll() }
     }
-    
-    private var obs: [Token] = []
+
+    private var tokens: [Token] = []
     private var count = 0
 }
