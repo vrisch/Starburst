@@ -136,6 +136,22 @@ internal class Storage<TS: State>: Shelf {
     }
     
     func dispatch(_ action: S.A) {
+        reducers.forEach { reducer in
+            states.enumerated().forEach { let (index, state) = $0
+                var local = state
+                let reduction = reducer.reduce(state: &local, action: action)
+                if case let .modified(newState) = reduction {
+                    states[index] = newState
+                    observers.forEach { $0.newState(state: newState, reason: .modified) }
+                } else if case let .modified2(newState, reason) = reduction {
+                    states[index] = newState
+                    observers.forEach { $0.newState(state: newState, reason: reason) }
+                }
+            }
+        }
+    }
+/* 
+    func dispatch(_ action: S.A) {
         var observations: [()->Void] = []
         reducers.forEach { reducer in
             states.enumerated().forEach { let (index, state) = $0
@@ -152,7 +168,7 @@ internal class Storage<TS: State>: Shelf {
         }
         observations.forEach { $0() }
     }
-    
+*/
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID {
         let any = AnyObserver<S>(priority, observer)
         observers.append(any)

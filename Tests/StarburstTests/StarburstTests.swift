@@ -81,7 +81,7 @@ class StarburstTests: XCTestCase {
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
 
         mainStore.reset()
-        mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3)
 
