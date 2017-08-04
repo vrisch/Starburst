@@ -705,7 +705,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Starburst.Starburst-iOS-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 			};
 			name = Debug;
 		};
@@ -718,7 +717,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Starburst.Starburst-iOS-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 			};
 			name = Release;
 		};

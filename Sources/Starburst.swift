@@ -61,34 +61,36 @@ public struct Store {
     
     public init() { }
     
-    public mutating func add<S: State>(state: S) -> Token {
-        let any = AnyShelf(Storage<S>(state: state))
+    public mutating func add<S: State>(state: S) -> Tokens {
+        let tokens = Tokens()
+        let any = AnyShelf(Storage<S>(states: [state]))
         shelves.append(any)
-        return Token(uuid: any.uuid, store: self)
+        tokens.tokens.append(Token(uuid: any.uuid, store: self))
+        return tokens
     }
     
-    public func add<S>(reducer: @escaping Reducer<S>) -> Token {
-        var token: Token? = nil
+    public func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
+        let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.add(reducer: reducer) {
-                token = Token(uuid: uuid, store: self)
+                tokens.tokens.append(Token(uuid: uuid, store: self))
             }
         }
-        return token!
+        return tokens
     }
     
     public func dispatch(_ action: Action) {
         shelves.forEach { $0.dispatch(action) }
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Token {
-        var token: Token? = nil
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
+        let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.subscribe(priority, observer) {
-                token = Token(uuid: uuid, store: self)
+                tokens.tokens.append(Token(uuid: uuid, store: self))
             }
         }
-        return token!
+        return tokens
     }
     
     public mutating func unsubscribe(token: Token?) {
@@ -112,21 +114,21 @@ public final class Tokens {
     
     public init() { }
     deinit { done() }
-
-    public func once(_ subscription: () -> Token) {
+    
+    public func once(_ subscription: () -> Tokens) {
         once { [subscription()] }
     }
-
-    public func once(_ subscriptions: () -> [Token]) {
-        if count == 0 { tokens += subscriptions() }
+    
+    public func once(_ subscriptions: () -> [Tokens]) {
+        if count == 0 { subscriptions().forEach { tokens += $0.tokens } }
         count += 1
     }
-
+    
     public func done() {
         count -= 1
         if count == 0 { tokens.removeAll() }
     }
-
-    private var tokens: [Token] = []
+    
+    fileprivate var tokens: [Token] = []
     private var count = 0
 }
