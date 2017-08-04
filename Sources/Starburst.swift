@@ -63,32 +63,43 @@ public struct Store {
     
     public mutating func add<S: State>(state: S) -> Tokens {
         let tokens = Tokens()
-        let any = AnyShelf(Storage<S>(states: [state]))
-        shelves.append(any)
-        tokens.tokens.append(Token(uuid: any.uuid, store: self))
-        return tokens
-    }
-    
-    public func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
-        let tokens = Tokens()
         shelves.forEach {
-            if let uuid = $0.add(reducer: reducer) {
-                tokens.tokens.append(Token(uuid: uuid, store: self))
+            if let uuid = $0.add(state: state) {
+                tokens.add(Token(uuid: uuid, store: self))
             }
+        }
+        if tokens.isEmpty {
+            tokens.add(add(states: [state], reducer: nil, observer: nil))
         }
         return tokens
     }
-    
+
+    public mutating func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
+        let tokens = Tokens()
+        shelves.forEach {
+            if let uuid = $0.add(reducer: reducer) {
+                tokens.add(Token(uuid: uuid, store: self))
+            }
+        }
+        if tokens.isEmpty {
+            tokens.add(add(states: [], reducer: reducer, observer: nil))
+        }
+        return tokens
+    }
+
     public func dispatch(_ action: Action) {
         shelves.forEach { $0.dispatch(action) }
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
+    public mutating func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
         let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.subscribe(priority, observer) {
-                tokens.tokens.append(Token(uuid: uuid, store: self))
+                tokens.add(Token(uuid: uuid, store: self))
             }
+        }
+        if tokens.isEmpty {
+            tokens.add(add(states: [], reducer: nil, priority: priority, observer: observer))
         }
         return tokens
     }
@@ -115,20 +126,58 @@ public final class Tokens {
     public init() { }
     deinit { done() }
     
+    public var isEmpty: Bool { return tokens.isEmpty }
+
     public func once(_ subscription: () -> Tokens) {
         once { [subscription()] }
     }
     
     public func once(_ subscriptions: () -> [Tokens]) {
-        if count == 0 { subscriptions().forEach { tokens += $0.tokens } }
+        if count == 0 { subscriptions().forEach { add($0) } }
         count += 1
     }
-    
+
+    public func always(_ subscription: () -> Tokens) {
+        always { [subscription()] }
+    }
+
+    public func always(_ subscriptions: () -> [Tokens]) {
+        subscriptions().forEach { add($0) }
+        count += 1
+    }
+
     public func done() {
         count -= 1
         if count == 0 { tokens.removeAll() }
     }
-    
+
+    public func add(_ tokens: Tokens) {
+        self.tokens += tokens.tokens
+    }
+    public func add(_ token: Token) {
+        tokens.append(token)
+    }
+
     fileprivate var tokens: [Token] = []
     private var count = 0
+}
+
+
+private extension Store {
+
+    private mutating func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) -> Tokens {
+        let tokens = Tokens()
+        let any = AnyShelf(Storage<S>(states: states))
+        shelves.append(any)
+        tokens.add(Token(uuid: any.uuid, store: self))
+
+        if let reducer = reducer, let uuid = any.add(reducer: reducer) {
+            tokens.add(Token(uuid: uuid, store: self))
+        }
+        if let observer = observer, let uuid = any.subscribe(priority, observer) {
+            tokens.add(Token(uuid: uuid, store: self))
+        }
+
+        return tokens
+    }
 }

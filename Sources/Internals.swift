@@ -50,7 +50,8 @@ internal struct AnyObserver<S: State>: Equatable {
 
 internal protocol Shelf: class {
     associatedtype S: State
-    
+
+    func add(state: S) -> UUID
     func add(reducer: @escaping Reducer<S>) -> UUID
     func dispatch(_ action: S.A)
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
@@ -61,7 +62,13 @@ internal struct AnyShelf {
     let uuid = UUID()
     
     init<S: Shelf>(_ shelf: S) {
-        addBox = { reducer in
+        addStateBox = { state in
+            if let state = state as? S.S {
+                return shelf.add(state: state)
+            }
+            return nil
+        }
+        addReducerBox = { reducer in
             if let reducer = reducer as? AnyReducer<S.S> {
                 return shelf.add(reducer: reducer.reduce)
             }
@@ -83,10 +90,14 @@ internal struct AnyShelf {
         }
     }
     
-    func add<S>(reducer: @escaping Reducer<S>) -> UUID? {
-        return addBox(AnyReducer<S>(reducer))
+    func add<S>(state: S) -> UUID? {
+        return addStateBox(state)
     }
     
+    func add<S>(reducer: @escaping Reducer<S>) -> UUID? {
+        return addReducerBox(AnyReducer<S>(reducer))
+    }
+
     func dispatch(_ action: Action) {
         dispatchBox(action)
     }
@@ -98,8 +109,9 @@ internal struct AnyShelf {
     func unsubscribe(uuid: UUID) {
         unsubscribeBox(uuid)
     }
-    
-    private let addBox: (Any) -> UUID?
+
+    private let addStateBox: (Any) -> UUID?
+    private let addReducerBox: (Any) -> UUID?
     private let dispatchBox: (Action) -> Void
     private let subscribeBox: (Any) -> UUID?
     private let unsubscribeBox: (UUID) -> Void
@@ -112,8 +124,9 @@ internal class Storage<TS: State>: Shelf {
         self.states = states
     }
 
-    func add(state: S) {
+    func add(state: S) -> UUID {
         states.append(state)
+        return UUID()
     }
 
     func add(reducer: @escaping Reducer<S>) -> UUID {
@@ -165,3 +178,4 @@ internal class Storage<TS: State>: Shelf {
     private var reducers: [AnyReducer<S>] = []
     private var observers: [AnyObserver<S>] = []
 }
+

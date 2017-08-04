@@ -23,6 +23,7 @@ struct CounterState: State {
 }
 
 func counterReducer(state: inout CounterState, action: CounterAction) -> Reduction<CounterState> {
+    globalReducerCount += 1
     switch action {
     case .increase:
         state.counter += 1
@@ -36,13 +37,14 @@ func counterReducer(state: inout CounterState, action: CounterAction) -> Reducti
 }
 
 func counterObserver(state: CounterState, reason: Reason) {
-    globalCounter = state.counter
     globalObserverCount += 1
+    globalCounter = state.counter
 }
 
 var mainStore = Store()
 var globalCounter = 0
 var globalObserverCount = 0
+var globalReducerCount = 0
 
 class StarburstTests: XCTestCase {
     
@@ -50,6 +52,7 @@ class StarburstTests: XCTestCase {
         mainStore.reset()
         globalCounter = 0
         globalObserverCount = 0
+        globalReducerCount = 0
     }
 
     func testImmutability() {
@@ -81,24 +84,95 @@ class StarburstTests: XCTestCase {
         mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3)
+
+        XCTAssertEqual(globalReducerCount, 4)
     }
     
-    func testReordering1() {
+    func testReorderingRSO() {
         let state = CounterState()
         let tokens = Tokens()
         tokens.once {[
             mainStore.add(reducer: counterReducer),
             mainStore.add(state: state),
-            mainStore.subscribe(observer: counterObserver)
+            mainStore.subscribe(observer: counterObserver),
             ]}
         XCTAssertEqual(globalCounter, 0)
         mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
+
+        XCTAssertEqual(globalReducerCount, 1)
+    }
+
+    func testReorderingROS() {
+        let state = CounterState()
+        let tokens = Tokens()
+        tokens.once {[
+            mainStore.add(reducer: counterReducer),
+            mainStore.subscribe(observer: counterObserver),
+            mainStore.add(state: state),
+            ]}
+        XCTAssertEqual(globalCounter, 0)
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 1)
+
+        XCTAssertEqual(globalReducerCount, 1)
+    }
+
+    func testReorderingORS() {
+        let state = CounterState()
+        let tokens = Tokens()
+        tokens.once {[
+            mainStore.subscribe(observer: counterObserver),
+            mainStore.add(reducer: counterReducer),
+            mainStore.add(state: state),
+            ]}
+        XCTAssertEqual(globalCounter, 0)
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 1)
+
+        XCTAssertEqual(globalReducerCount, 1)
+    }
+
+    func testReorderingOSR() {
+        let state = CounterState()
+        let tokens = Tokens()
+        tokens.once {[
+            mainStore.subscribe(observer: counterObserver),
+            mainStore.add(state: state),
+            mainStore.add(reducer: counterReducer),
+            ]}
+        XCTAssertEqual(globalCounter, 0)
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 1)
+
+        XCTAssertEqual(globalReducerCount, 1)
+    }
+
+    func testMultipleStates() {
+        let state1 = CounterState()
+        let state2 = CounterState()
+        let tokens = Tokens()
+        tokens.once {[
+            mainStore.add(reducer: counterReducer),
+            mainStore.subscribe(observer: counterObserver),
+            ]}
+        tokens.always {[
+            mainStore.add(state: state1),
+            mainStore.add(state: state2),
+            ]}
+        XCTAssertEqual(globalCounter, 0)
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 1)
+
+        XCTAssertEqual(globalReducerCount, 2)
     }
 
     static var allTests = [
         ("testImmutability", testImmutability),
         ("testMutability", testMutability),
-        ("testReordering1", testReordering1),
+        ("testReorderingRSO", testReorderingRSO),
+        ("testReorderingROS", testReorderingROS),
+        ("testReorderingORS", testReorderingORS),
+        ("testReorderingOSR", testReorderingOSR),
     ]
 }
