@@ -58,7 +58,7 @@ class StarburstTests: XCTestCase {
     func testImmutability() {
         let state = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.add(state: state),
             mainStore.add(reducer: counterReducer)
             ]}
@@ -69,7 +69,7 @@ class StarburstTests: XCTestCase {
     
     func testMutability() {
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver)
@@ -91,7 +91,7 @@ class StarburstTests: XCTestCase {
     func testReorderingRSO() {
         let state = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.add(reducer: counterReducer),
             mainStore.add(state: state),
             mainStore.subscribe(observer: counterObserver),
@@ -106,7 +106,7 @@ class StarburstTests: XCTestCase {
     func testReorderingROS() {
         let state = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(state: state),
@@ -121,7 +121,7 @@ class StarburstTests: XCTestCase {
     func testReorderingORS() {
         let state = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(reducer: counterReducer),
             mainStore.add(state: state),
@@ -136,7 +136,7 @@ class StarburstTests: XCTestCase {
     func testReorderingOSR() {
         let state = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(state: state),
             mainStore.add(reducer: counterReducer),
@@ -152,11 +152,9 @@ class StarburstTests: XCTestCase {
         let state1 = CounterState()
         let state2 = CounterState()
         let tokens = Tokens()
-        tokens.once {[
+        tokens.add {[
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver),
-            ]}
-        tokens.always {[
             mainStore.add(state: state1),
             mainStore.add(state: state2),
             ]}
@@ -174,5 +172,6 @@ class StarburstTests: XCTestCase {
         ("testReorderingROS", testReorderingROS),
         ("testReorderingORS", testReorderingORS),
         ("testReorderingOSR", testReorderingOSR),
+        ("testMultipleStates", testMultipleStates),
     ]
 }

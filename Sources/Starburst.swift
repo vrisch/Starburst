@@ -128,29 +128,27 @@ public final class Tokens {
     
     public var isEmpty: Bool { return tokens.isEmpty }
 
-    public func once(_ subscription: () -> Tokens) {
-        once { [subscription()] }
+    public func add(_ subscription: () -> Tokens) {
+        add { [subscription()] }
     }
 
-    public func once(_ subscriptions: () -> [Tokens]) {
-        if count == 0 { subscriptions().forEach { add($0) } }
-        count += 1
+    public func add(_ subscriptions: () -> [Tokens]) {
+        subscriptions().forEach { add($0) }
     }
 
-    public func done() {
-        count -= 1
-        if count == 0 { tokens.removeAll() }
+    public func empty() {
+        tokens.removeAll()
     }
 
     fileprivate func add(_ tokens: Tokens) {
         self.tokens += tokens.tokens
     }
+
     fileprivate func add(_ token: Token) {
         tokens.append(token)
     }
 
     private var tokens: [Token] = []
-    private var count = 0
 }
 
 
