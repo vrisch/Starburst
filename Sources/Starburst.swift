@@ -56,12 +56,11 @@ public enum Priority: Int {
     case low = 50
 }
 
-public struct Store {
-    private var shelves: [AnyShelf] = []
+public final class Store {
     
     public init() { }
     
-    public mutating func add<S: State>(state: S) -> Tokens {
+    public func add<S: State>(state: S) -> Tokens {
         let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.add(state: state) {
@@ -74,7 +73,7 @@ public struct Store {
         return tokens
     }
 
-    public mutating func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
+    public func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
         let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.add(reducer: reducer) {
@@ -91,7 +90,7 @@ public struct Store {
         shelves.forEach { $0.dispatch(action) }
     }
     
-    public mutating func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
         let tokens = Tokens()
         shelves.forEach {
             if let uuid = $0.subscribe(priority, observer) {
@@ -104,7 +103,7 @@ public struct Store {
         return tokens
     }
     
-    public mutating func unsubscribe(token: Token?) {
+    public func unsubscribe(token: Token?) {
         if let token = token {
             shelves.forEach { $0.unsubscribe(uuid: token.uuid) }
             shelves.enumerated().forEach { let (index, any) = $0
@@ -116,9 +115,11 @@ public struct Store {
         }
     }
     
-    public mutating func reset() {
+    public func reset() {
         shelves = []
     }
+
+    private var shelves: [AnyShelf] = []
 }
 
 public final class Tokens {
@@ -165,7 +166,7 @@ public final class Tokens {
 
 private extension Store {
 
-    private mutating func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) -> Tokens {
+    private func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) -> Tokens {
         let tokens = Tokens()
         let any = AnyShelf(Storage<S>(states: states))
         shelves.append(any)

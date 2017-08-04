@@ -85,7 +85,7 @@ class StarburstTests: XCTestCase {
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3)
 
-        XCTAssertEqual(globalReducerCount, 4)
+        XCTAssertEqual(globalReducerCount, 3)
     }
     
     func testReorderingRSO() {
