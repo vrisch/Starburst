@@ -126,7 +126,7 @@ internal class Storage<TS: State>: Shelf {
 
     func add(state: S) -> UUID {
         states.append(state)
-        return UUID()
+        return UUID() // There is really no UUID to return at this stage, but perhaps it should be
     }
 
     func add(reducer: @escaping Reducer<S>) -> UUID {
@@ -150,25 +150,7 @@ internal class Storage<TS: State>: Shelf {
             }
         }
     }
-/* 
-    func dispatch(_ action: S.A) {
-        var observations: [()->Void] = []
-        reducers.forEach { reducer in
-            states.enumerated().forEach { let (index, state) = $0
-                var local = state
-                let reduction = reducer.reduce(state: &local, action: action)
-                if case let .modified(newState) = reduction {
-                    states[index] = newState
-                    observations.append( { self.observers.forEach { $0.newState(state: newState, reason: .modified) } })
-                } else if case let .modified2(newState, reason) = reduction {
-                    states[index] = newState
-                    observations.append( { self.observers.forEach { $0.newState(state: newState, reason: reason) } })
-                }
-            }
-        }
-        observations.forEach { $0() }
-    }
-*/
+
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID {
         let any = AnyObserver<S>(priority, observer)
         observers.append(any)

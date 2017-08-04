@@ -125,25 +125,15 @@ public final class Store {
 public final class Tokens {
     
     public init() { }
-    deinit { done() }
     
     public var isEmpty: Bool { return tokens.isEmpty }
 
     public func once(_ subscription: () -> Tokens) {
         once { [subscription()] }
     }
-    
+
     public func once(_ subscriptions: () -> [Tokens]) {
         if count == 0 { subscriptions().forEach { add($0) } }
-        count += 1
-    }
-
-    public func always(_ subscription: () -> Tokens) {
-        always { [subscription()] }
-    }
-
-    public func always(_ subscriptions: () -> [Tokens]) {
-        subscriptions().forEach { add($0) }
         count += 1
     }
 
@@ -152,14 +142,14 @@ public final class Tokens {
         if count == 0 { tokens.removeAll() }
     }
 
-    public func add(_ tokens: Tokens) {
+    fileprivate func add(_ tokens: Tokens) {
         self.tokens += tokens.tokens
     }
-    public func add(_ token: Token) {
+    fileprivate func add(_ token: Token) {
         tokens.append(token)
     }
 
-    fileprivate var tokens: [Token] = []
+    private var tokens: [Token] = []
     private var count = 0
 }
 
