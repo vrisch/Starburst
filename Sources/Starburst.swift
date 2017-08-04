@@ -116,9 +116,18 @@ public final class Tokens {
     public func once(_ subscription: () -> Token) {
         once { [subscription()] }
     }
-
+    
     public func once(_ subscriptions: () -> [Token]) {
         if count == 0 { tokens += subscriptions() }
+        count += 1
+    }
+    
+    public func always(_ subscription: () -> Token) {
+        always { [subscription()] }
+    }
+
+    public func always(_ subscriptions: () -> [Token]) {
+        tokens += subscriptions()
         count += 1
     }
 
