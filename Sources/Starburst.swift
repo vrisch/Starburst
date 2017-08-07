@@ -111,7 +111,6 @@ public final class Store {
                     shelves.remove(at: index)
                 }
             }
-            print("TOKEN UNSUBSCRIBED")
         }
     }
     
