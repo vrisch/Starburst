@@ -20,10 +20,20 @@ public enum Reason {
     case subscribed
     case modified
     case custom(CustomReason)
-    
+}
+
+public extension Reason {
     public var isSubscribed: Bool {
         guard case .subscribed = self else { return false }
         return true
+    }
+    public var isModified: Bool {
+        guard case .modified = self else { return false }
+        return true
+    }
+    public var custom: CustomReason? {
+        guard case let .custom(customReason) = self else { return nil }
+        return customReason
     }
 }
 
