@@ -161,7 +161,7 @@ public final class Tokens {
 }
 
 
-extension Store: CustomDebugStringConvertible {
+extension Store: CustomStringConvertible {
 
     private func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) -> Tokens {
         let tokens = Tokens()
@@ -179,8 +179,8 @@ extension Store: CustomDebugStringConvertible {
         return tokens
     }
 
-    public var debugDescription: String {
-        var result = "Store {\n"
+    public var description: String {
+        var result = "\(type(of: self)): {\n"
         shelves.forEach { result.append("\($0)\n") }
         result.append("}")
         return result

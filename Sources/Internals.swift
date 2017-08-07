@@ -48,7 +48,7 @@ internal struct AnyObserver<S: State>: Equatable {
     private let box: (S, Reason) -> ()
 }
 
-internal protocol Shelf: class {
+internal protocol Shelf: class, CustomStringConvertible {
     associatedtype S: State
 
     func add(state: S) -> UUID
@@ -58,10 +58,12 @@ internal protocol Shelf: class {
     func unsubscribe(uuid: UUID)
 }
 
-internal struct AnyShelf {
+internal struct AnyShelf: CustomStringConvertible {
     let uuid = UUID()
-    
+    var description: String { return descriptionBox() }
+
     init<S: Shelf>(_ shelf: S) {
+        descriptionBox = { return shelf.description }
         addStateBox = { state in
             if let state = state as? S.S {
                 return shelf.add(state: state)
@@ -110,6 +112,7 @@ internal struct AnyShelf {
         unsubscribeBox(uuid)
     }
 
+    private let descriptionBox: () -> String
     private let addStateBox: (Any) -> UUID?
     private let addReducerBox: (Any) -> UUID?
     private let dispatchBox: (Action) -> Void
@@ -179,9 +182,9 @@ internal class Storage<TS: State>: Shelf {
     private var observers: [AnyObserver<S>] = []
 }
 
-extension Storage: CustomDebugStringConvertible {
-    public var debugDescription: String {
-        return "Storage \(type(of:states.first)): \(states.count) states, \(reducers.count) reducers, \(observers.count) observers"
+extension Storage: CustomStringConvertible {
+    public var description: String {
+        return "\(type(of: self)): \(states.count) states, \(reducers.count) reducers, \(observers.count) observers"
     }
 }
 

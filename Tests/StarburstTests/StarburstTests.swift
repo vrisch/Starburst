@@ -65,6 +65,7 @@ class StarburstTests: XCTestCase {
         XCTAssertEqual(state.counter, 0)
         mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(state.counter, 0)
+        print("\(mainStore)")
     }
     
     func testMutability() {
