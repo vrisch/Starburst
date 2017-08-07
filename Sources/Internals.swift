@@ -179,3 +179,9 @@ internal class Storage<TS: State>: Shelf {
     private var observers: [AnyObserver<S>] = []
 }
 
+extension Storage: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return "Storage \(type(of:states.first)): \(states.count) states, \(reducers.count) reducers, \(observers.count) observers"
+    }
+}
+
