@@ -101,8 +101,12 @@ public final class Store {
         }
         return tokens
     }
-    
+
     public func dispatch(_ action: Action) throws {
+        try forward(action)
+    }
+
+    public func forward(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
