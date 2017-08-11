@@ -25,10 +25,10 @@ internal struct AnyReducer<S: State> {
     init(_ reducer: @escaping Reducer<S>) {
         box = reducer
     }
-    func reduce(state: inout S, action: S.A) -> Reduction<S> {
-        return box(&state, action)
+    func reduce(state: inout S, action: S.A) throws -> Reduction<S> {
+        return try box(&state, action)
     }
-    private let box: (inout S, S.A) -> Reduction<S>
+    private let box: (inout S, S.A) throws -> Reduction<S>
 }
 
 internal struct AnyObserver<S: State>: Equatable {
@@ -53,7 +53,7 @@ internal protocol Shelf: class, CustomStringConvertible {
 
     func add(state: S) -> UUID
     func add(reducer: @escaping Reducer<S>) -> UUID
-    func dispatch(_ action: S.A)
+    func dispatch(_ action: S.A) throws
     func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
     func unsubscribe(uuid: UUID)
 }
@@ -78,7 +78,7 @@ internal struct AnyShelf: CustomStringConvertible {
         }
         dispatchBox = { action in
             if let action = action as? S.S.A {
-                shelf.dispatch(action)
+                try shelf.dispatch(action)
             }
         }
         subscribeBox = { observer in
@@ -100,8 +100,8 @@ internal struct AnyShelf: CustomStringConvertible {
         return addReducerBox(AnyReducer<S>(reducer))
     }
 
-    func dispatch(_ action: Action) {
-        dispatchBox(action)
+    func dispatch(_ action: Action) throws {
+        try dispatchBox(action)
     }
     
     func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID? {
@@ -115,7 +115,7 @@ internal struct AnyShelf: CustomStringConvertible {
     private let descriptionBox: () -> String
     private let addStateBox: (Any) -> UUID?
     private let addReducerBox: (Any) -> UUID?
-    private let dispatchBox: (Action) -> Void
+    private let dispatchBox: (Action) throws -> Void
     private let subscribeBox: (Any) -> UUID?
     private let unsubscribeBox: (UUID) -> Void
 }
@@ -138,11 +138,11 @@ internal class Storage<TS: State>: Shelf {
         return any.uuid
     }
     
-    func dispatch(_ action: S.A) {
-        reducers.forEach { reducer in
-            states.enumerated().forEach { let (index, state) = $0
+    func dispatch(_ action: S.A) throws {
+        try reducers.forEach { reducer in
+            try states.enumerated().forEach { let (index, state) = $0
                 var local = state
-                let reduction = reducer.reduce(state: &local, action: action)
+                let reduction = try reducer.reduce(state: &local, action: action)
                 if case let .modified(newState) = reduction {
                     states[index] = newState
                     observers.forEach { $0.newState(state: newState, reason: .modified) }

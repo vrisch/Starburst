@@ -43,7 +43,7 @@ public enum Reduction<S: State> {
     case modified2(newState: S, reason: Reason)
 }
 
-public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) -> Reduction<S>
+public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) throws -> Reduction<S>
 
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) -> Void
 
@@ -97,7 +97,11 @@ public final class Store {
     }
 
     public func dispatch(_ action: Action) {
-        shelves.forEach { $0.dispatch(action) }
+        try! shelves.forEach { try $0.dispatch(action) }
+    }
+    
+    public func dispatch2(_ action: Action) throws {
+        try shelves.forEach { try $0.dispatch(action) }
     }
     
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
