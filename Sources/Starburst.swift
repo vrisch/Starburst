@@ -96,11 +96,7 @@ public final class Store {
         return tokens
     }
 
-    public func dispatch(_ action: Action) {
-        try! shelves.forEach { try $0.dispatch(action) }
-    }
-    
-    public func dispatch2(_ action: Action) throws {
+    public func dispatch(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
