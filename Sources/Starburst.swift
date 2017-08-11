@@ -45,7 +45,7 @@ public enum Reduction<S: State> {
 
 public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) throws -> Reduction<S>
 
-public typealias Observer<S: State> = (_ state: S, _ reason: Reason) -> Void
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public final class Token {
     let uuid: UUID
@@ -72,43 +72,52 @@ public final class Store {
     
     public func add<S: State>(state: S) -> Tokens {
         let tokens = Tokens()
-        shelves.forEach {
-            if let uuid = $0.add(state: state) {
-                tokens.add(Token(uuid: uuid, store: self))
+        do {
+            shelves.forEach {
+                if let uuid = $0.add(state: state) {
+                    tokens.add(Token(uuid: uuid, store: self))
+                }
             }
-        }
-        if tokens.isEmpty {
-            tokens.add(add(states: [state], reducer: nil, observer: nil))
+            if tokens.isEmpty {
+                try tokens.add(add(states: [state], reducer: nil, observer: nil))
+            }
+        } catch {
         }
         return tokens
     }
-
+    
     public func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
         let tokens = Tokens()
-        shelves.forEach {
-            if let uuid = $0.add(reducer: reducer) {
-                tokens.add(Token(uuid: uuid, store: self))
+        do {
+            shelves.forEach {
+                if let uuid = $0.add(reducer: reducer) {
+                    tokens.add(Token(uuid: uuid, store: self))
+                }
             }
-        }
-        if tokens.isEmpty {
-            tokens.add(add(states: [], reducer: reducer, observer: nil))
+            if tokens.isEmpty {
+                try tokens.add(add(states: [], reducer: reducer, observer: nil))
+            }
+        } catch {
         }
         return tokens
     }
-
+    
     public func dispatch(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
         let tokens = Tokens()
-        shelves.forEach {
-            if let uuid = $0.subscribe(priority, observer) {
-                tokens.add(Token(uuid: uuid, store: self))
+        do {
+            try shelves.forEach {
+                if let uuid = try $0.subscribe(priority, observer) {
+                    tokens.add(Token(uuid: uuid, store: self))
+                }
             }
-        }
-        if tokens.isEmpty {
-            tokens.add(add(states: [], reducer: nil, priority: priority, observer: observer))
+            if tokens.isEmpty {
+                try tokens.add(add(states: [], reducer: nil, priority: priority, observer: observer))
+            }
+        } catch {
         }
         return tokens
     }
@@ -127,7 +136,7 @@ public final class Store {
     public func reset() {
         shelves = []
     }
-
+    
     private var shelves: [AnyShelf] = []
 }
 
@@ -136,49 +145,49 @@ public final class Tokens {
     public init() { }
     
     public var isEmpty: Bool { return tokens.isEmpty }
-
+    
     public func add(_ subscription: () -> Tokens) {
         add { [subscription()] }
     }
-
+    
     public func add(_ subscriptions: () -> [Tokens]) {
         subscriptions().forEach { add($0) }
     }
-
+    
     public func empty() {
         tokens.removeAll()
     }
-
+    
     fileprivate func add(_ tokens: Tokens) {
         self.tokens += tokens.tokens
     }
-
+    
     fileprivate func add(_ token: Token) {
         tokens.append(token)
     }
-
+    
     private var tokens: [Token] = []
 }
 
 
 extension Store: CustomStringConvertible {
-
-    private func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) -> Tokens {
+    
+    private func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Tokens {
         let tokens = Tokens()
         let any = AnyShelf(Storage<S>(states: states))
         shelves.append(any)
         tokens.add(Token(uuid: any.uuid, store: self))
-
+        
         if let reducer = reducer, let uuid = any.add(reducer: reducer) {
             tokens.add(Token(uuid: uuid, store: self))
         }
-        if let observer = observer, let uuid = any.subscribe(priority, observer) {
+        if let observer = observer, let uuid = try any.subscribe(priority, observer) {
             tokens.add(Token(uuid: uuid, store: self))
         }
-
+        
         return tokens
     }
-
+    
     public var description: String {
         var result = "\(type(of: self)): {\n"
         shelves.forEach { result.append("\($0)\n") }

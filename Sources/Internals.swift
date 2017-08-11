@@ -39,13 +39,13 @@ internal struct AnyObserver<S: State>: Equatable {
         self.priority = priority
         box = observer
     }
-    func newState(state: S, reason: Reason) {
-        box(state, reason)
+    func newState(state: S, reason: Reason) throws {
+        try box(state, reason)
     }
     public static func ==(lhs: AnyObserver, rhs: AnyObserver) -> Bool {
         return lhs.uuid == rhs.uuid
     }
-    private let box: (S, Reason) -> ()
+    private let box: (S, Reason) throws -> ()
 }
 
 internal protocol Shelf: class, CustomStringConvertible {
@@ -54,7 +54,7 @@ internal protocol Shelf: class, CustomStringConvertible {
     func add(state: S) -> UUID
     func add(reducer: @escaping Reducer<S>) -> UUID
     func dispatch(_ action: S.A) throws
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> UUID
     func unsubscribe(uuid: UUID)
 }
 
@@ -83,7 +83,7 @@ internal struct AnyShelf: CustomStringConvertible {
         }
         subscribeBox = { observer in
             if let observer = observer as? AnyObserver<S.S> {
-                return shelf.subscribe(observer.priority, observer.newState)
+                return try shelf.subscribe(observer.priority, observer.newState)
             }
             return nil
         }
@@ -104,8 +104,8 @@ internal struct AnyShelf: CustomStringConvertible {
         try dispatchBox(action)
     }
     
-    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID? {
-        return subscribeBox(AnyObserver<S>(priority, observer))
+    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> UUID? {
+        return try subscribeBox(AnyObserver<S>(priority, observer))
     }
     
     func unsubscribe(uuid: UUID) {
@@ -116,7 +116,7 @@ internal struct AnyShelf: CustomStringConvertible {
     private let addStateBox: (Any) -> UUID?
     private let addReducerBox: (Any) -> UUID?
     private let dispatchBox: (Action) throws -> Void
-    private let subscribeBox: (Any) -> UUID?
+    private let subscribeBox: (Any) throws -> UUID?
     private let unsubscribeBox: (UUID) -> Void
 }
 
@@ -145,21 +145,21 @@ internal class Storage<TS: State>: Shelf {
                 let reduction = try reducer.reduce(state: &local, action: action)
                 if case let .modified(newState) = reduction {
                     states[index] = newState
-                    observers.forEach { $0.newState(state: newState, reason: .modified) }
+                    try observers.forEach { try $0.newState(state: newState, reason: .modified) }
                 } else if case let .modified2(newState, reason) = reduction {
                     states[index] = newState
-                    observers.forEach { $0.newState(state: newState, reason: reason) }
+                    try observers.forEach { try $0.newState(state: newState, reason: reason) }
                 }
             }
         }
     }
 
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) -> UUID {
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> UUID {
         let any = AnyObserver<S>(priority, observer)
         observers.append(any)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
-        states.forEach { state in
-            observer(state, .subscribed)
+        try states.forEach { state in
+            try observer(state, .subscribed)
         }
         return any.uuid
     }

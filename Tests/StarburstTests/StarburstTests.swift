@@ -14,6 +14,7 @@ enum CounterAction: Action {
     case increase
     case decrease
     case nothing
+    case disaster
 }
 
 struct CounterState: State {
@@ -22,7 +23,11 @@ struct CounterState: State {
     var counter: Int = 0
 }
 
-func counterReducer(state: inout CounterState, action: CounterAction) -> Reduction<CounterState> {
+enum Error: Swift.Error {
+    case disaster
+}
+
+func counterReducer(state: inout CounterState, action: CounterAction) throws -> Reduction<CounterState> {
     globalReducerCount += 1
     switch action {
     case .increase:
@@ -33,6 +38,8 @@ func counterReducer(state: inout CounterState, action: CounterAction) -> Reducti
         return .modified(newState: state)
     case .nothing:
         return .unmodified
+    case .disaster:
+        throw Error.disaster
     }
 }
 
@@ -54,8 +61,8 @@ class StarburstTests: XCTestCase {
         globalObserverCount = 0
         globalReducerCount = 0
     }
-
-    func testImmutability() {
+    
+    func testImmutability() throws {
         let state = CounterState()
         let tokens = Tokens()
         tokens.add {[
@@ -63,33 +70,33 @@ class StarburstTests: XCTestCase {
             mainStore.add(reducer: counterReducer)
             ]}
         XCTAssertEqual(state.counter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(state.counter, 0)
         print("\(mainStore)")
     }
     
-    func testMutability() {
+    func testMutability() throws {
         let tokens = Tokens()
         tokens.add {[
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver)
             ]}
-        mainStore.dispatch(CounterAction.increase)
-        mainStore.dispatch(CounterAction.increase)
-        mainStore.dispatch(CounterAction.nothing)
+        try mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.nothing)
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
-
+        
         mainStore.reset()
-        mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
+        try mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3)
-
+        
         XCTAssertEqual(globalReducerCount, 3)
     }
     
-    func testReorderingRSO() {
+    func testReorderingRSO() throws {
         let state = CounterState()
         let tokens = Tokens()
         tokens.add {[
@@ -98,13 +105,13 @@ class StarburstTests: XCTestCase {
             mainStore.subscribe(observer: counterObserver),
             ]}
         XCTAssertEqual(globalCounter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-
+        
         XCTAssertEqual(globalReducerCount, 1)
     }
-
-    func testReorderingROS() {
+    
+    func testReorderingROS() throws {
         let state = CounterState()
         let tokens = Tokens()
         tokens.add {[
@@ -113,13 +120,13 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state),
             ]}
         XCTAssertEqual(globalCounter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-
+        
         XCTAssertEqual(globalReducerCount, 1)
     }
-
-    func testReorderingORS() {
+    
+    func testReorderingORS() throws {
         let state = CounterState()
         let tokens = Tokens()
         tokens.add {[
@@ -128,13 +135,13 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state),
             ]}
         XCTAssertEqual(globalCounter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-
+        
         XCTAssertEqual(globalReducerCount, 1)
     }
-
-    func testReorderingOSR() {
+    
+    func testReorderingOSR() throws {
         let state = CounterState()
         let tokens = Tokens()
         tokens.add {[
@@ -143,13 +150,13 @@ class StarburstTests: XCTestCase {
             mainStore.add(reducer: counterReducer),
             ]}
         XCTAssertEqual(globalCounter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-
+        
         XCTAssertEqual(globalReducerCount, 1)
     }
-
-    func testMultipleStates() {
+    
+    func testMultipleStates() throws {
         let state1 = CounterState()
         let state2 = CounterState()
         let tokens = Tokens()
@@ -160,12 +167,24 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state2),
             ]}
         XCTAssertEqual(globalCounter, 0)
-        mainStore.dispatch(CounterAction.increase)
+        try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-
+        
         XCTAssertEqual(globalReducerCount, 2)
     }
-
+    
+    func testExceptions() {
+        let tokens = Tokens()
+        tokens.add {[
+            mainStore.add(state: CounterState()),
+            mainStore.add(reducer: counterReducer),
+            mainStore.subscribe { (state: CounterState, reason: Reason) throws in
+                try mainStore.dispatch(CounterAction.disaster)
+            },
+        ]}
+        XCTAssertThrowsError(try mainStore.dispatch(CounterAction.increase))
+    }
+    
     static var allTests = [
         ("testImmutability", testImmutability),
         ("testMutability", testMutability),
@@ -174,5 +193,5 @@ class StarburstTests: XCTestCase {
         ("testReorderingORS", testReorderingORS),
         ("testReorderingOSR", testReorderingOSR),
         ("testMultipleStates", testMultipleStates),
-    ]
+        ]
 }
