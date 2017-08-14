@@ -179,7 +179,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
-                try mainStore.forward(CounterAction.disaster)
+                try mainStore.dispatch(CounterAction.disaster)
             },
         ]}
         XCTAssertThrowsError(try mainStore.dispatch(CounterAction.increase))

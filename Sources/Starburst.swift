@@ -103,10 +103,6 @@ public final class Store {
     }
 
     public func dispatch(_ action: Action) throws {
-        try forward(action)
-    }
-
-    public func forward(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
