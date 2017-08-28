@@ -67,7 +67,13 @@ public enum Priority: Int {
 }
 
 public final class Store {
-    
+
+    public var count: Int {
+        var result = 0
+        shelves.forEach { result += $0.count }
+        return result
+    }
+
     public init() { }
     
     public func add<S: State>(state: S) -> Tokens {

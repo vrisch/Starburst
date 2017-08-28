@@ -51,6 +51,8 @@ internal struct AnyObserver<S: State>: Equatable {
 internal protocol Shelf: class, CustomStringConvertible {
     associatedtype S: State
 
+    var count: Int { get }
+
     func add(state: S) -> UUID
     func add(reducer: @escaping Reducer<S>) -> UUID
     func dispatch(_ action: S.A) throws
@@ -60,9 +62,12 @@ internal protocol Shelf: class, CustomStringConvertible {
 
 internal struct AnyShelf: CustomStringConvertible {
     let uuid = UUID()
+
+    var count: Int { return countBox() }
     var description: String { return descriptionBox() }
 
     init<S: Shelf>(_ shelf: S) {
+        countBox = { return shelf.count }
         descriptionBox = { return shelf.description }
         addStateBox = { state in
             if let state = state as? S.S {
@@ -112,6 +117,7 @@ internal struct AnyShelf: CustomStringConvertible {
         unsubscribeBox(uuid)
     }
 
+    private let countBox: () -> Int
     private let descriptionBox: () -> String
     private let addStateBox: (Any) -> UUID?
     private let addReducerBox: (Any) -> UUID?
@@ -132,6 +138,8 @@ internal struct AnyState<S: State> {
 internal class Storage<TS: State>: Shelf {
     typealias S = TS
     
+    var count: Int { return states.count + reducers.count + observers.count }
+
     func add(state: S) -> UUID {
         let any = AnyState<S>(state)
         states.append(any)
@@ -147,14 +155,14 @@ internal class Storage<TS: State>: Shelf {
     func dispatch(_ action: S.A) throws {
         try reducers.forEach { reducer in
             try states.enumerated().forEach {
-                var (_, state) = $0
+                let (index, state) = $0
                 var local = state.state
                 let reduction = try reducer.reduce(state: &local, action: action)
                 if case let .modified(newState) = reduction {
-                    state.state = newState
+                    states[index].state = newState
                     try observers.forEach { try $0.newState(state: newState, reason: .modified) }
                 } else if case let .modified2(newState, reason) = reduction {
-                    state.state = newState
+                    states[index].state = newState
                     try observers.forEach { try $0.newState(state: newState, reason: reason) }
                 }
             }

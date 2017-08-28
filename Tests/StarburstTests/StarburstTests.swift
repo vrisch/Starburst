@@ -181,10 +181,25 @@ class StarburstTests: XCTestCase {
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
                 try mainStore.dispatch(CounterAction.disaster)
             },
-        ]}
+            ]}
         XCTAssertThrowsError(try mainStore.dispatch(CounterAction.increase))
     }
     
+    func testCount() {
+        do {
+            let tokens = Tokens()
+            tokens.add {[
+                mainStore.add(state: CounterState()),
+                mainStore.add(reducer: counterReducer),
+                mainStore.subscribe { (state: CounterState, reason: Reason) throws in
+                    try mainStore.dispatch(CounterAction.disaster)
+                },
+            ]}
+            XCTAssertEqual(mainStore.count, 3)
+        }
+        XCTAssertEqual(mainStore.count, 0)
+    }
+
     static var allTests = [
         ("testImmutability", testImmutability),
         ("testMutability", testMutability),
@@ -193,5 +208,7 @@ class StarburstTests: XCTestCase {
         ("testReorderingORS", testReorderingORS),
         ("testReorderingOSR", testReorderingOSR),
         ("testMultipleStates", testMultipleStates),
+        ("testExceptions", testExceptions),
+        ("testCount", testCount),
         ]
 }
