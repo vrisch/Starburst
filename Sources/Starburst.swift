@@ -79,7 +79,7 @@ public final class Store {
                 }
             }
             if tokens.isEmpty {
-                try tokens.add(add(states: [state], reducer: nil, observer: nil))
+                try tokens.add(add(state: state, reducer: nil, observer: nil))
             }
         } catch {
         }
@@ -95,7 +95,7 @@ public final class Store {
                 }
             }
             if tokens.isEmpty {
-                try tokens.add(add(states: [], reducer: reducer, observer: nil))
+                try tokens.add(add(state: nil, reducer: reducer, observer: nil))
             }
         } catch {
         }
@@ -115,7 +115,7 @@ public final class Store {
                 }
             }
             if tokens.isEmpty {
-                try tokens.add(add(states: [], reducer: nil, priority: priority, observer: observer))
+                try tokens.add(add(state: nil, reducer: nil, priority: priority, observer: observer))
             }
         } catch {
         }
@@ -172,12 +172,15 @@ public final class Tokens {
 
 extension Store: CustomStringConvertible {
     
-    private func add<S>(states: [S], reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Tokens {
+    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Tokens {
         let tokens = Tokens()
-        let any = AnyShelf(Storage<S>(states: states))
+        let any = AnyShelf(Storage<S>())
         shelves.append(any)
         tokens.add(Token(uuid: any.uuid, store: self))
-        
+
+        if let state = state, let uuid = any.add(state: state) {
+            tokens.add(Token(uuid: uuid, store: self))
+        }
         if let reducer = reducer, let uuid = any.add(reducer: reducer) {
             tokens.add(Token(uuid: uuid, store: self))
         }

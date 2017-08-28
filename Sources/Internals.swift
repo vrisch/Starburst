@@ -120,16 +120,22 @@ internal struct AnyShelf: CustomStringConvertible {
     private let unsubscribeBox: (UUID) -> Void
 }
 
+internal struct AnyState<S: State> {
+    let uuid = UUID()
+    var state: S
+
+    init(_ state: S) {
+        self.state = state
+    }
+}
+
 internal class Storage<TS: State>: Shelf {
     typealias S = TS
     
-    init(states: [S]) {
-        self.states = states
-    }
-
     func add(state: S) -> UUID {
-        states.append(state)
-        return UUID() // There is really no UUID to return at this stage, but perhaps it should be
+        let any = AnyState<S>(state)
+        states.append(any)
+        return any.uuid
     }
 
     func add(reducer: @escaping Reducer<S>) -> UUID {
@@ -140,14 +146,15 @@ internal class Storage<TS: State>: Shelf {
     
     func dispatch(_ action: S.A) throws {
         try reducers.forEach { reducer in
-            try states.enumerated().forEach { let (index, state) = $0
-                var local = state
+            try states.enumerated().forEach {
+                var (_, state) = $0
+                var local = state.state
                 let reduction = try reducer.reduce(state: &local, action: action)
                 if case let .modified(newState) = reduction {
-                    states[index] = newState
+                    state.state = newState
                     try observers.forEach { try $0.newState(state: newState, reason: .modified) }
                 } else if case let .modified2(newState, reason) = reduction {
-                    states[index] = newState
+                    state.state = newState
                     try observers.forEach { try $0.newState(state: newState, reason: reason) }
                 }
             }
@@ -159,7 +166,7 @@ internal class Storage<TS: State>: Shelf {
         observers.append(any)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
         try states.forEach { state in
-            try observer(state, .subscribed)
+            try observer(state.state, .subscribed)
         }
         return any.uuid
     }
@@ -175,9 +182,14 @@ internal class Storage<TS: State>: Shelf {
                 reducers.remove(at: index)
             }
         }
+        states.enumerated().forEach { let (index, any) = $0
+            if any.uuid == uuid {
+                states.remove(at: index)
+            }
+        }
     }
     
-    private var states: [S] = []
+    private var states: [AnyState<S>] = []
     private var reducers: [AnyReducer<S>] = []
     private var observers: [AnyObserver<S>] = []
 }
