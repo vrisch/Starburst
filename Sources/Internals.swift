@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Orbit
 
 extension Reason: CustomStringConvertible {
     
@@ -145,7 +146,13 @@ internal class Storage<TS: State>: Shelf {
         states.append(any)
         return any.uuid
     }
-
+    
+    func add2(state: S) -> Disposable {
+        let any = AnyState<S>(state)
+        states.append(any)
+        return .dispose { [weak self] in self?.unsubscribe(uuid: any.uuid)}
+    }
+    
     func add(reducer: @escaping Reducer<S>) -> UUID {
         let any = AnyReducer<S>(reducer)
         reducers.append(any)
