@@ -141,13 +141,13 @@ private extension Store {
         disposable += .dispose { [weak self] in self?.unsubscribe(uuid: any.uuid) }
         
         if let state = state {
-            any.add(state: state).flatMap { disposable.add($0) }
+            any.add(state: state).flatMap { disposable += $0 }
         }
         if let reducer = reducer {
-            any.add(reducer: reducer).flatMap { disposable.add($0) }
+            any.add(reducer: reducer).flatMap { disposable += $0 }
         }
         if let observer = observer {
-            try any.subscribe(priority, observer).flatMap { disposable.add($0) }
+            try any.subscribe(priority, observer).flatMap { disposable += $0 }
         }
         
         return disposable
