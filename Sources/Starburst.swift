@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Orbit
 
 public protocol State {
     associatedtype A: Action
@@ -47,19 +48,6 @@ public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) throws ->
 
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
-public final class Token {
-    let uuid: UUID
-    var store: Store
-    
-    init(uuid: UUID, store: Store) {
-        self.uuid = uuid
-        self.store = store
-    }
-    deinit {
-        store.unsubscribe(token: self)
-    }
-}
-
 public enum Priority: Int {
     case high = 0
     case normal = 20
@@ -67,140 +55,101 @@ public enum Priority: Int {
 }
 
 public final class Store {
-
+    
     public var count: Int {
         var result = 0
         shelves.forEach { result += $0.count }
         return result
     }
-
+    
     public init() { }
     
-    public func add<S: State>(state: S) -> Tokens {
-        let tokens = Tokens()
+    public func add<S: State>(state: S) -> Disposable {
+        var disposable: Disposable = .none
         do {
             shelves.forEach {
-                if let uuid = $0.add(state: state) {
-                    tokens.add(Token(uuid: uuid, store: self))
-                }
+                $0.add(state: state).flatMap { disposable += $0 }
             }
-            if tokens.isEmpty {
-                try tokens.add(add(state: state, reducer: nil, observer: nil))
+            if disposable.isEmpty {
+                try disposable += add(state: state, reducer: nil, observer: nil)
             }
         } catch {
         }
-        return tokens
+        return disposable
     }
     
-    public func add<S>(reducer: @escaping Reducer<S>) -> Tokens {
-        let tokens = Tokens()
+    public func add<S>(reducer: @escaping Reducer<S>) -> Disposable {
+        var disposable: Disposable = .none
         do {
             shelves.forEach {
-                if let uuid = $0.add(reducer: reducer) {
-                    tokens.add(Token(uuid: uuid, store: self))
-                }
+                $0.add(reducer: reducer).flatMap { disposable += $0 }
             }
-            if tokens.isEmpty {
-                try tokens.add(add(state: nil, reducer: reducer, observer: nil))
+            if disposable.isEmpty {
+                try disposable += add(state: nil, reducer: reducer, observer: nil)
             }
         } catch {
         }
-        return tokens
+        return disposable
     }
-
+    
     public func dispatch(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Tokens {
-        let tokens = Tokens()
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposable {
+        var disposable: Disposable = .none
         do {
             try shelves.forEach {
-                if let uuid = try $0.subscribe(priority, observer) {
-                    tokens.add(Token(uuid: uuid, store: self))
-                }
+                try $0.subscribe(priority, observer).flatMap { disposable += $0 }
             }
-            if tokens.isEmpty {
-                try tokens.add(add(state: nil, reducer: nil, priority: priority, observer: observer))
+            if disposable.isEmpty {
+                try disposable += add(state: nil, reducer: nil, priority: priority, observer: observer)
             }
         } catch {
         }
-        return tokens
-    }
-    
-    public func unsubscribe(token: Token?) {
-        if let token = token {
-            shelves.forEach { $0.unsubscribe(uuid: token.uuid) }
-            shelves.enumerated().forEach { let (index, any) = $0
-                if any.uuid == token.uuid {
-                    shelves.remove(at: index)
-                }
-            }
-        }
-    }
-    
-    public func reset() {
-        shelves = []
+        return disposable
     }
     
     private var shelves: [AnyShelf] = []
 }
 
-public final class Tokens {
-    
-    public init() { }
-    
-    public var isEmpty: Bool { return tokens.isEmpty }
-    
-    public func add(_ subscription: () -> Tokens) {
-        add { [subscription()] }
-    }
-    
-    public func add(_ subscriptions: () -> [Tokens]) {
-        subscriptions().forEach { add($0) }
-    }
-    
-    public func empty() {
-        tokens.removeAll()
-    }
-    
-    fileprivate func add(_ tokens: Tokens) {
-        self.tokens += tokens.tokens
-    }
-    
-    fileprivate func add(_ token: Token) {
-        tokens.append(token)
-    }
-    
-    private var tokens: [Token] = []
-}
-
-
 extension Store: CustomStringConvertible {
-    
-    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Tokens {
-        let tokens = Tokens()
-        let any = AnyShelf(Storage<S>())
-        shelves.append(any)
-        tokens.add(Token(uuid: any.uuid, store: self))
-
-        if let state = state, let uuid = any.add(state: state) {
-            tokens.add(Token(uuid: uuid, store: self))
-        }
-        if let reducer = reducer, let uuid = any.add(reducer: reducer) {
-            tokens.add(Token(uuid: uuid, store: self))
-        }
-        if let observer = observer, let uuid = try any.subscribe(priority, observer) {
-            tokens.add(Token(uuid: uuid, store: self))
-        }
-        
-        return tokens
-    }
     
     public var description: String {
         var result = "\(type(of: self)): {\n"
         shelves.forEach { result.append("\($0)\n") }
         result.append("}")
         return result
+    }
+}
+
+private extension Store {
+    
+    private func unsubscribe(uuid: UUID) {
+        shelves.enumerated().forEach { let (index, any) = $0
+            if any.uuid == uuid {
+                shelves.remove(at: index)
+            }
+        }
+    }
+    
+    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Disposable {
+        var disposable: Disposable = .none
+        
+        let any = AnyShelf(Storage<S>())
+        shelves.append(any)
+        disposable += .dispose { [weak self] in self?.unsubscribe(uuid: any.uuid) }
+        
+        if let state = state {
+            any.add(state: state).flatMap { disposable.add($0) }
+        }
+        if let reducer = reducer {
+            any.add(reducer: reducer).flatMap { disposable.add($0) }
+        }
+        if let observer = observer {
+            try any.subscribe(priority, observer).flatMap { disposable.add($0) }
+        }
+        
+        return disposable
     }
 }

@@ -18,6 +18,7 @@
 		DD7502881C68FEDE006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6DA0F1BF000BD002C0205 /* Starburst.framework */; };
 		DD7502921C690C7A006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Starburst.framework */; };
 		F72B5ADF1F56996C0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
+		F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
 		F76D852A1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
 		F76D852B1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
 		F76D852C1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
@@ -78,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */,
 				52D6D9871BEFF229002C0205 /* Starburst.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,6 +260,7 @@
 				52D6D9821BEFF229002C0205 /* Sources */,
 				52D6D9831BEFF229002C0205 /* Frameworks */,
 				52D6D9841BEFF229002C0205 /* Resources */,
+				F72B5AE11F56B7D00031CAD9 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -473,6 +476,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F72B5AE11F56B7D00031CAD9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/Orbit.framework",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		52D6D9771BEFF229002C0205 /* Sources */ = {
@@ -722,6 +742,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = Configs/StarburstTests.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Starburst.Starburst-iOS-Tests";
@@ -734,6 +758,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = Configs/StarburstTests.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Starburst.Starburst-iOS-Tests";
