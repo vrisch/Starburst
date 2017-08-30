@@ -50,7 +50,7 @@ func counterObserver(state: CounterState, reason: Reason) {
 }
 
 var mainStore = Store()
-var disposable: Disposable = .none
+var disposable = Disposable()
 var globalCounter = 0
 var globalObserverCount = 0
 var globalReducerCount = 0

@@ -79,7 +79,7 @@ public final class Store {
     }
     
     public func add<S>(reducer: @escaping Reducer<S>) -> Disposable {
-        var disposable: Disposable = .none
+        var disposable = Disposable()
         do {
             shelves.forEach {
                 $0.add(reducer: reducer).flatMap { disposable += $0 }
@@ -97,7 +97,7 @@ public final class Store {
     }
     
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposable {
-        var disposable: Disposable = .none
+        var disposable = Disposable()
         do {
             try shelves.forEach {
                 try $0.subscribe(priority, observer).flatMap { disposable += $0 }
@@ -134,11 +134,11 @@ private extension Store {
     }
     
     private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Disposable {
-        var disposable: Disposable = .none
-        
+        var disposable = Disposable()
+
         let any = AnyShelf(Storage<S>())
         shelves.append(any)
-        disposable += .dispose { [weak self] in self?.unsubscribe(uuid: any.uuid) }
+        disposable += Disposable { [weak self] in self?.unsubscribe(uuid: any.uuid) }
         
         if let state = state {
             any.add(state: state).flatMap { disposable += $0 }
