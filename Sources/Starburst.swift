@@ -65,7 +65,7 @@ public final class Store {
     public init() { }
     
     public func add<S: State>(state: S) -> Disposable {
-        var disposable: Disposable = .none
+        var disposable = Disposable()
         do {
             shelves.forEach {
                 $0.add(state: state).flatMap { disposable += $0 }
