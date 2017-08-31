@@ -138,8 +138,8 @@ private extension Store {
 
         let any = AnyShelf(Storage<S>())
         shelves.append(any)
-        disposable += Disposable { [weak self] in self?.unsubscribe(uuid: any.uuid) }
-        
+        disposable += Disposable { self.unsubscribe(uuid: any.uuid) }
+
         if let state = state {
             any.add(state: state).flatMap { disposable += $0 }
         }

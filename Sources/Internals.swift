@@ -135,13 +135,13 @@ internal class Storage<TS: State>: Shelf {
     func add(state: S) -> Disposable {
         let any = AnyState<S>(state)
         states.append(any)
-        return Disposable { [weak self] in self?.unsubscribe(uuid: any.uuid) }
+        return Disposable { self.unsubscribe(uuid: any.uuid) }
     }
     
     func add(reducer: @escaping Reducer<S>) -> Disposable {
         let any = AnyReducer<S>(reducer)
         reducers.append(any)
-        return Disposable { [weak self] in self?.unsubscribe(uuid: any.uuid) }
+        return Disposable { self.unsubscribe(uuid: any.uuid) }
     }
     
     func dispatch(_ action: S.A) throws {
@@ -168,7 +168,7 @@ internal class Storage<TS: State>: Shelf {
         try states.forEach { state in
             try observer(state.state, .subscribed)
         }
-        return Disposable { [weak self] in self?.unsubscribe(uuid: any.uuid) }
+        return Disposable { self.unsubscribe(uuid: any.uuid) }
     }
     
     func unsubscribe(uuid: UUID) {
