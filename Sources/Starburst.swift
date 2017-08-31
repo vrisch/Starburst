@@ -138,7 +138,7 @@ private extension Store {
 
         let any = AnyShelf(Storage<S>())
         shelves.append(any)
-        disposable += Disposable { self.unsubscribe(uuid: any.uuid) }
+        disposable += Disposable(block: { self.unsubscribe(uuid: any.uuid) })
 
         if let state = state {
             any.add(state: state).flatMap { disposable += $0 }
