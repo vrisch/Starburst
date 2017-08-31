@@ -64,50 +64,50 @@ public final class Store {
     
     public init() { }
     
-    public func add<S: State>(state: S) -> Disposable {
-        var disposable = Disposable()
+    public func add<S: State>(state: S) -> Disposables {
+        var disposables = Disposables()
         do {
             shelves.forEach {
-                $0.add(state: state).flatMap { disposable += $0 }
+                $0.add(state: state).flatMap { disposables += $0 }
             }
-            if disposable.isEmpty {
-                try disposable += add(state: state, reducer: nil, observer: nil)
+            if disposables.isEmpty {
+                try disposables += add(state: state, reducer: nil, observer: nil)
             }
         } catch {
         }
-        return disposable
+        return disposables
     }
     
-    public func add<S>(reducer: @escaping Reducer<S>) -> Disposable {
-        var disposable = Disposable()
+    public func add<S>(reducer: @escaping Reducer<S>) -> Disposables {
+        var disposables = Disposables()
         do {
             shelves.forEach {
-                $0.add(reducer: reducer).flatMap { disposable += $0 }
+                $0.add(reducer: reducer).flatMap { disposables += $0 }
             }
-            if disposable.isEmpty {
-                try disposable += add(state: nil, reducer: reducer, observer: nil)
+            if disposables.isEmpty {
+                try disposables += add(state: nil, reducer: reducer, observer: nil)
             }
         } catch {
         }
-        return disposable
+        return disposables
     }
     
     public func dispatch(_ action: Action) throws {
         try shelves.forEach { try $0.dispatch(action) }
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposable {
-        var disposable = Disposable()
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposables {
+        var disposables = Disposables()
         do {
             try shelves.forEach {
-                try $0.subscribe(priority, observer).flatMap { disposable += $0 }
+                try $0.subscribe(priority, observer).flatMap { disposables += $0 }
             }
-            if disposable.isEmpty {
-                try disposable += add(state: nil, reducer: nil, priority: priority, observer: observer)
+            if disposables.isEmpty {
+                try disposables += add(state: nil, reducer: nil, priority: priority, observer: observer)
             }
         } catch {
         }
-        return disposable
+        return disposables
     }
     
     private var shelves: [AnyShelf] = []
@@ -133,23 +133,23 @@ private extension Store {
         }
     }
     
-    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Disposable {
-        var disposable = Disposable()
+    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Disposables {
+        var disposables = Disposables()
 
         let any = AnyShelf(Storage<S>())
         shelves.append(any)
-        disposable += Disposable(block: { self.unsubscribe(uuid: any.uuid) })
+        disposables += Disposables(block: { self.unsubscribe(uuid: any.uuid) })
 
         if let state = state {
-            any.add(state: state).flatMap { disposable += $0 }
+            any.add(state: state).flatMap { disposables += $0 }
         }
         if let reducer = reducer {
-            any.add(reducer: reducer).flatMap { disposable += $0 }
+            any.add(reducer: reducer).flatMap { disposables += $0 }
         }
         if let observer = observer {
-            try any.subscribe(priority, observer).flatMap { disposable += $0 }
+            try any.subscribe(priority, observer).flatMap { disposables += $0 }
         }
         
-        return disposable
+        return disposables
     }
 }

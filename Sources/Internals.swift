@@ -54,10 +54,10 @@ internal protocol Shelf: class, CustomStringConvertible {
 
     var count: Int { get }
 
-    func add(state: S) -> Disposable
-    func add(reducer: @escaping Reducer<S>) -> Disposable
+    func add(state: S) -> Disposables
+    func add(reducer: @escaping Reducer<S>) -> Disposables
     func dispatch(_ action: S.A) throws
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposable
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables
 }
 
 internal struct AnyShelf: CustomStringConvertible {
@@ -94,11 +94,11 @@ internal struct AnyShelf: CustomStringConvertible {
         }
     }
     
-    func add<S>(state: S) -> Disposable? {
+    func add<S>(state: S) -> Disposables? {
         return addStateBox(state)
     }
     
-    func add<S>(reducer: @escaping Reducer<S>) -> Disposable? {
+    func add<S>(reducer: @escaping Reducer<S>) -> Disposables? {
         return addReducerBox(AnyReducer<S>(reducer))
     }
 
@@ -106,16 +106,16 @@ internal struct AnyShelf: CustomStringConvertible {
         try dispatchBox(action)
     }
     
-    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposable? {
+    func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables? {
         return try subscribeBox(AnyObserver<S>(priority, observer))
     }
 
     private let countBox: () -> Int
     private let descriptionBox: () -> String
-    private let addStateBox: (Any) -> Disposable?
-    private let addReducerBox: (Any) -> Disposable?
+    private let addStateBox: (Any) -> Disposables?
+    private let addReducerBox: (Any) -> Disposables?
     private let dispatchBox: (Action) throws -> Void
-    private let subscribeBox: (Any) throws -> Disposable?
+    private let subscribeBox: (Any) throws -> Disposables?
 }
 
 internal struct AnyState<S: State> {
@@ -132,16 +132,16 @@ internal class Storage<TS: State>: Shelf {
     
     var count: Int { return states.count + reducers.count + observers.count }
 
-    func add(state: S) -> Disposable {
+    func add(state: S) -> Disposables {
         let any = AnyState<S>(state)
         states.append(any)
-        return Disposable(block: { self.unsubscribe(uuid: any.uuid) })
+        return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
     }
     
-    func add(reducer: @escaping Reducer<S>) -> Disposable {
+    func add(reducer: @escaping Reducer<S>) -> Disposables {
         let any = AnyReducer<S>(reducer)
         reducers.append(any)
-        return Disposable(block: { self.unsubscribe(uuid: any.uuid) })
+        return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
     }
     
     func dispatch(_ action: S.A) throws {
@@ -161,14 +161,14 @@ internal class Storage<TS: State>: Shelf {
         }
     }
 
-    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposable {
+    func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables {
         let any = AnyObserver<S>(priority, observer)
         observers.append(any)
         observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
         try states.forEach { state in
             try observer(state.state, .subscribed)
         }
-        return Disposable(block: { self.unsubscribe(uuid: any.uuid) })
+        return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
     }
     
     func unsubscribe(uuid: UUID) {

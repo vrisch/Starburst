@@ -50,7 +50,7 @@ func counterObserver(state: CounterState, reason: Reason) {
 }
 
 var mainStore = Store()
-var disposable = Disposable()
+var disposables = Disposables()
 var globalCounter = 0
 var globalObserverCount = 0
 var globalReducerCount = 0
@@ -58,7 +58,7 @@ var globalReducerCount = 0
 class StarburstTests: XCTestCase {
     
     override func setUp() {
-        disposable.empty()
+        disposables.empty()
         //        mainStore.reset()
         globalCounter = 0
         globalObserverCount = 0
@@ -67,7 +67,7 @@ class StarburstTests: XCTestCase {
     
     func testImmutability() throws {
         let state = CounterState()
-        disposable += [
+        disposables += [
             mainStore.add(state: state),
             mainStore.add(reducer: counterReducer)
         ]
@@ -78,7 +78,7 @@ class StarburstTests: XCTestCase {
     }
     
     func testMutability() throws {
-        disposable += [
+        disposables += [
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver)
@@ -90,7 +90,7 @@ class StarburstTests: XCTestCase {
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
         
-        disposable.empty()
+        disposables.empty()
         
         try mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
         XCTAssertEqual(globalCounter, 2)
@@ -101,7 +101,7 @@ class StarburstTests: XCTestCase {
     
     func testReorderingRSO() throws {
         let state = CounterState()
-        disposable += [
+        disposables += [
             mainStore.add(reducer: counterReducer),
             mainStore.add(state: state),
             mainStore.subscribe(observer: counterObserver),
@@ -115,7 +115,7 @@ class StarburstTests: XCTestCase {
     
     func testReorderingROS() throws {
         let state = CounterState()
-        disposable += [
+        disposables += [
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(state: state),
@@ -129,7 +129,7 @@ class StarburstTests: XCTestCase {
     
     func testReorderingORS() throws {
         let state = CounterState()
-        disposable += [
+        disposables += [
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(reducer: counterReducer),
             mainStore.add(state: state),
@@ -143,7 +143,7 @@ class StarburstTests: XCTestCase {
     
     func testReorderingOSR() throws {
         let state = CounterState()
-        disposable += [
+        disposables += [
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(state: state),
             mainStore.add(reducer: counterReducer),
@@ -158,7 +158,7 @@ class StarburstTests: XCTestCase {
     func testMultipleStates() throws {
         let state1 = CounterState()
         let state2 = CounterState()
-        disposable += [
+        disposables += [
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe(observer: counterObserver),
             mainStore.add(state: state1),
@@ -172,7 +172,7 @@ class StarburstTests: XCTestCase {
     }
     
     func testExceptions() {
-        disposable += [
+        disposables += [
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
@@ -183,7 +183,7 @@ class StarburstTests: XCTestCase {
     }
     
     func testCount() {
-        disposable += [
+        disposables += [
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
@@ -192,7 +192,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(mainStore.count, 3)
         
-        disposable.empty()
+        disposables.empty()
         XCTAssertEqual(mainStore.count, 0)
     }
     
