@@ -11,17 +11,17 @@ import XCTest
 import Orbit
 import Starburst
 
+struct CounterState: State {
+    var counter: Int = 0
+}
+
 enum CounterAction: Action {
+    typealias S = CounterState
+
     case increase
     case decrease
     case nothing
     case disaster
-}
-
-struct CounterState: State {
-    typealias A = CounterAction
-    
-    var counter: Int = 0
 }
 
 enum Error: Swift.Error {
@@ -84,8 +84,11 @@ class StarburstTests: XCTestCase {
             mainStore.subscribe(observer: counterObserver)
         ]
         XCTAssertEqual(mainStore.count, 3)
+        XCTAssertEqual(globalCounter, 0)
         try mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 1)
         try mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 2)
         try mainStore.dispatch(CounterAction.nothing)
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
@@ -107,6 +110,7 @@ class StarburstTests: XCTestCase {
             mainStore.subscribe(observer: counterObserver),
         ]
         XCTAssertEqual(globalCounter, 0)
+        XCTAssertEqual(globalObserverCount, 1) // Subscription
         try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
@@ -121,6 +125,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state),
         ]
         XCTAssertEqual(globalCounter, 0)
+        XCTAssertEqual(globalObserverCount, 1) // Subscription
         try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
@@ -135,6 +140,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state),
         ]
         XCTAssertEqual(globalCounter, 0)
+        XCTAssertEqual(globalObserverCount, 1) // Subscription
         try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
@@ -149,6 +155,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(reducer: counterReducer),
         ]
         XCTAssertEqual(globalCounter, 0)
+        XCTAssertEqual(globalObserverCount, 1) // Subscription
         try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
@@ -165,6 +172,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: state2),
         ]
         XCTAssertEqual(globalCounter, 0)
+        XCTAssertEqual(globalObserverCount, 2) // Subscriptions
         try mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         

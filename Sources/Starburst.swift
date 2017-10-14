@@ -9,44 +9,22 @@
 import Foundation
 import Orbit
 
-public protocol State {
-    associatedtype A: Action
+public protocol State {}
+public protocol Action {
+    associatedtype S: State
 }
+public typealias Reducer<A: Action> = (_ state: inout A.S, _ action: A) throws -> Reduction<A.S>
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
-public protocol Action {}
-
-public protocol CustomReason: CustomStringConvertible {}
 public enum Reason {
-    
     case subscribed
     case modified
-    case custom(CustomReason)
-}
-
-public extension Reason {
-    public var isSubscribed: Bool {
-        guard case .subscribed = self else { return false }
-        return true
-    }
-    public var isModified: Bool {
-        guard case .modified = self else { return false }
-        return true
-    }
-    public var custom: CustomReason? {
-        guard case let .custom(customReason) = self else { return nil }
-        return customReason
-    }
 }
 
 public enum Reduction<S: State> {
     case unmodified
     case modified(newState: S)
-    case modified2(newState: S, reason: Reason)
 }
-
-public typealias Reducer<S: State> = (_ state: inout S, _ action: S.A) throws -> Reduction<S>
-
-public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Priority: Int {
     case high = 0
@@ -57,99 +35,41 @@ public enum Priority: Int {
 public final class Store {
     
     public var count: Int {
-        var result = 0
-        shelves.forEach { result += $0.count }
-        return result
+        return states.count + reducers.count + observers.count
     }
     
     public init() { }
     
     public func add<S: State>(state: S) -> Disposables {
-        var disposables = Disposables()
-        do {
-            shelves.forEach {
-                $0.add(state: state).flatMap { disposables += $0 }
-            }
-            if disposables.isEmpty {
-                try disposables += add(state: state, reducer: nil, observer: nil)
-            }
-        } catch {
-        }
-        return disposables
+        let box = StateBox(state: state)
+        states.append(box)
+        observers.forEach { try? $0.apply(state: state) }
+        return Disposables(block: { self.remove(state: box) })
     }
-    
-    public func add<S>(reducer: @escaping Reducer<S>) -> Disposables {
-        var disposables = Disposables()
-        do {
-            shelves.forEach {
-                $0.add(reducer: reducer).flatMap { disposables += $0 }
-            }
-            if disposables.isEmpty {
-                try disposables += add(state: nil, reducer: reducer, observer: nil)
-            }
-        } catch {
-        }
-        return disposables
+
+    public func add<A: Action>(reducer: @escaping Reducer<A>) -> Disposables {
+        let box = ReducerBox(reducer: reducer)
+        reducers.append(box)
+        return Disposables(block: { self.remove(reducer: box) })
     }
-    
-    public func dispatch(_ action: Action) throws {
-        try shelves.forEach { try $0.dispatch(action) }
-    }
-    
+
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposables {
-        var disposables = Disposables()
-        do {
-            try shelves.forEach {
-                try $0.subscribe(priority, observer).flatMap { disposables += $0 }
-            }
-            if disposables.isEmpty {
-                try disposables += add(state: nil, reducer: nil, priority: priority, observer: observer)
-            }
-        } catch {
-        }
-        return disposables
+        let box = ObserverBox(priority: priority, observer: observer)
+        observers.append(box)
+        observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
+        states.forEach { try? $0.apply(observer: observer) }
+        return Disposables(block: { self.remove(observer: box) })
     }
-    
-    private var shelves: [AnyShelf] = []
-}
 
-extension Store: CustomStringConvertible {
-    
-    public var description: String {
-        var result = "\(type(of: self)): {\n"
-        shelves.forEach { result.append("\($0)\n") }
-        result.append("}")
-        return result
-    }
-}
-
-private extension Store {
-    
-    private func unsubscribe(uuid: UUID) {
-        shelves.enumerated().forEach { let (index, any) = $0
-            if any.uuid == uuid {
-                shelves.remove(at: index)
-            }
+    public func dispatch<A: Action>(_ action: A) throws {
+        try states.enumerated().forEach {
+            var (index, state) = $0
+            try state.apply(action: action, reducers: reducers, observers: observers)
+            states[index] = state
         }
     }
-    
-    private func add<S>(state: S?, reducer: Reducer<S>?, priority: Priority = .normal, observer: Observer<S>?) throws -> Disposables {
-        var disposables = Disposables()
 
-        let any = AnyShelf(Storage<S>())
-        shelves.append(any)
-        disposables += Disposables(block: { self.unsubscribe(uuid: any.uuid) })
-
-        if let state = state {
-            any.add(state: state).flatMap { disposables += $0 }
-        }
-        if let reducer = reducer {
-            any.add(reducer: reducer).flatMap { disposables += $0 }
-        }
-        if let observer = observer {
-            try any.subscribe(priority, observer).flatMap { disposables += $0 }
-        }
-        
-        return disposables
-    }
+    var states: [StateBox] = []
+    var reducers: [ReducerBox] = []
+    var observers: [ObserverBox] = []
 }
