@@ -62,10 +62,8 @@ public final class Store {
     }
 
     public func dispatch<A: Action>(_ action: A) throws {
-        try states.enumerated().forEach {
-            var (index, state) = $0
-            try state.apply(action: action, reducers: reducers, observers: observers)
-            states[index] = state
+        try states.forEach {
+            try $0.apply(action: action, reducers: reducers, observers: observers)
         }
     }
 

@@ -46,7 +46,7 @@ struct Box {
     private var value: Any
 }
 
-struct ReducerBox {
+final class ReducerBox {
     let uuid = UUID()
     
     init<A: Action>(reducer: Reducer<A>) {
@@ -63,14 +63,14 @@ struct ReducerBox {
     private let box: Box
 }
 
-struct StateBox {
+final class StateBox {
     let uuid = UUID()
     
     init<S: State>(state: S) {
         box = Box(value: state)
     }
     
-    mutating func apply<A: Action>(action: A, reducers: [ReducerBox], observers: [ObserverBox]) throws {
+    func apply<A: Action>(action: A, reducers: [ReducerBox], observers: [ObserverBox]) throws {
         for reducer in reducers {
             if var state : A.S = box.unwrap() {
                 try reducer.apply(state: &state, action: action) { newState in
@@ -89,7 +89,7 @@ struct StateBox {
     private var box: Box
 }
 
-struct ObserverBox {
+final class ObserverBox {
     let priority: Priority
     let uuid = UUID()
     

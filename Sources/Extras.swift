@@ -28,7 +28,7 @@ extension Reason: CustomStringConvertible {
 }
 
 extension Store: CustomStringConvertible {
-    
+
     public var description: String {
         var result = "\(type(of: self)): {\n"
         states.forEach { result.append("\($0)\n") }
