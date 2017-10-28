@@ -7,11 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3086FDA81FA50D9E0017BA53 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		3086FDA91FA50D9E0017BA53 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		3086FDAA1FA50D9E0017BA53 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
 		52D6D9871BEFF229002C0205 /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D97C1BEFF229002C0205 /* Starburst.framework */; };
-		8933C7851EB5B820000D00A4 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7841EB5B820000D00A4 /* Starburst.swift */; };
-		8933C7861EB5B820000D00A4 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7841EB5B820000D00A4 /* Starburst.swift */; };
-		8933C7871EB5B820000D00A4 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7841EB5B820000D00A4 /* Starburst.swift */; };
-		8933C7881EB5B820000D00A4 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7841EB5B820000D00A4 /* Starburst.swift */; };
 		8933C78E1EB5B82C000D00A4 /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7891EB5B82A000D00A4 /* StarburstTests.swift */; };
 		8933C78F1EB5B82C000D00A4 /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7891EB5B82A000D00A4 /* StarburstTests.swift */; };
 		8933C7901EB5B82D000D00A4 /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7891EB5B82A000D00A4 /* StarburstTests.swift */; };
@@ -19,14 +18,6 @@
 		DD7502921C690C7A006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Starburst.framework */; };
 		F72B5ADF1F56996C0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
 		F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
-		F76D852A1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
-		F76D852B1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
-		F76D852C1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
-		F76D852D1F234DC600198435 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D85291F234DC600198435 /* Internals.swift */; };
-		F7751CE31F91E312008126C2 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7751CE21F91E312008126C2 /* Extras.swift */; };
-		F7751CE41F91E312008126C2 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7751CE21F91E312008126C2 /* Extras.swift */; };
-		F7751CE51F91E312008126C2 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7751CE21F91E312008126C2 /* Extras.swift */; };
-		F7751CE61F91E312008126C2 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7751CE21F91E312008126C2 /* Extras.swift */; };
 		F7F721351F5E8DAA00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721341F5E8DAA00EA2877 /* Orbit.framework */; };
 		F7F721371F5E8DBB00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721361F5E8DBB00EA2877 /* Orbit.framework */; };
 		F7F721391F5E8DCE00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721381F5E8DCE00EA2877 /* Orbit.framework */; };
@@ -59,12 +50,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3086FDA51FA50D9E0017BA53 /* Extras.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extras.swift; path = Starburst/Extras.swift; sourceTree = "<group>"; };
+		3086FDA61FA50D9E0017BA53 /* Starburst.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Starburst.swift; path = Starburst/Starburst.swift; sourceTree = "<group>"; };
+		3086FDA71FA50D9E0017BA53 /* Internals.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Internals.swift; path = Starburst/Internals.swift; sourceTree = "<group>"; };
 		52D6D97C1BEFF229002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9861BEFF229002C0205 /* Starburst-iOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-iOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9E21BEFFF6E002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9F01BEFFFBE002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6DA0F1BF000BD002C0205 /* Starburst.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Starburst.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8933C7841EB5B820000D00A4 /* Starburst.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Starburst.swift; sourceTree = "<group>"; };
 		8933C7891EB5B82A000D00A4 /* StarburstTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StarburstTests.swift; sourceTree = "<group>"; };
 		AD2FAA261CD0B6D800659CF4 /* Starburst.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Starburst.plist; sourceTree = "<group>"; };
 		AD2FAA281CD0B6E100659CF4 /* StarburstTests.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = StarburstTests.plist; sourceTree = "<group>"; };
@@ -72,8 +65,6 @@
 		DD75028D1C690C7A006590AF /* Starburst-tvOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-tvOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F72B5ADB1F5697AD0031CAD9 /* Cartfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
 		F72B5ADE1F56996C0031CAD9 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/iOS/Orbit.framework; sourceTree = "<group>"; };
-		F76D85291F234DC600198435 /* Internals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Internals.swift; sourceTree = "<group>"; };
-		F7751CE21F91E312008126C2 /* Extras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extras.swift; sourceTree = "<group>"; };
 		F7F721341F5E8DAA00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/Mac/Orbit.framework; sourceTree = "<group>"; };
 		F7F721361F5E8DBB00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/watchOS/Orbit.framework; sourceTree = "<group>"; };
 		F7F721381F5E8DCE00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/tvOS/Orbit.framework; sourceTree = "<group>"; };
@@ -180,9 +171,9 @@
 		8933C7811EB5B7E0000D00A4 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				8933C7841EB5B820000D00A4 /* Starburst.swift */,
-				F7751CE21F91E312008126C2 /* Extras.swift */,
-				F76D85291F234DC600198435 /* Internals.swift */,
+				3086FDA51FA50D9E0017BA53 /* Extras.swift */,
+				3086FDA71FA50D9E0017BA53 /* Internals.swift */,
+				3086FDA61FA50D9E0017BA53 /* Starburst.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -521,9 +512,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F76D852A1F234DC600198435 /* Internals.swift in Sources */,
-				F7751CE31F91E312008126C2 /* Extras.swift in Sources */,
-				8933C7851EB5B820000D00A4 /* Starburst.swift in Sources */,
+				3086FDAA1FA50D9E0017BA53 /* Internals.swift in Sources */,
+				3086FDA91FA50D9E0017BA53 /* Starburst.swift in Sources */,
+				3086FDA81FA50D9E0017BA53 /* Extras.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,9 +530,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F76D852C1F234DC600198435 /* Internals.swift in Sources */,
-				F7751CE51F91E312008126C2 /* Extras.swift in Sources */,
-				8933C7871EB5B820000D00A4 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -549,9 +537,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F76D852D1F234DC600198435 /* Internals.swift in Sources */,
-				F7751CE61F91E312008126C2 /* Extras.swift in Sources */,
-				8933C7881EB5B820000D00A4 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -559,9 +544,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F76D852B1F234DC600198435 /* Internals.swift in Sources */,
-				F7751CE41F91E312008126C2 /* Extras.swift in Sources */,
-				8933C7861EB5B820000D00A4 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
