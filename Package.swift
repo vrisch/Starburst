@@ -9,7 +9,7 @@ let package = Package(
             targets: ["Starburst"]),
         ],
     dependencies: [
-        .package(url: "https://github.com/vrisch/Orbit.git", from: "0.0.2"),
+        .package(url: "https://github.com/vrisch/Orbit.git", .branch("master")),
         ],
     targets: [
         .target(
