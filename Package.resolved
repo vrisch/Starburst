@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Orbit",
+        "repositoryURL": "https://github.com/vrisch/Orbit.git",
+        "state": {
+          "branch": "master",
+          "revision": "047fc7ed7170210f6bdbf365d0dd27d3243f0092",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
