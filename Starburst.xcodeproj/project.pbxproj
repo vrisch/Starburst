@@ -16,6 +16,24 @@
 		8933C7901EB5B82D000D00A4 /* StarburstTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8933C7891EB5B82A000D00A4 /* StarburstTests.swift */; };
 		DD7502881C68FEDE006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6DA0F1BF000BD002C0205 /* Starburst.framework */; };
 		DD7502921C690C7A006590AF /* Starburst.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D9F01BEFFFBE002C0205 /* Starburst.framework */; };
+		F70C7EBB1FAC61860000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7EBC1FAC61860000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7EBD1FAC61860000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		F70C7EBE1FAC61860000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7EBF1FAC61860000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7EC01FAC61860000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		F70C7EC11FAC61870000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7EC21FAC61870000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7EC31FAC61870000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		F70C7EC41FAC61870000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7EC51FAC61870000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7EC61FAC61870000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		F70C7EC71FAC61880000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7EC81FAC61880000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7EC91FAC61880000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
+		F70C7ECA1FAC61890000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
+		F70C7ECB1FAC61890000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
+		F70C7ECC1FAC61890000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
 		F72B5ADF1F56996C0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
 		F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
 		F7F721351F5E8DAA00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721341F5E8DAA00EA2877 /* Orbit.framework */; };
@@ -524,6 +542,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7EC61FAC61870000E4C3 /* Starburst.swift in Sources */,
+				F70C7EC51FAC61870000E4C3 /* Internals.swift in Sources */,
+				F70C7EC41FAC61870000E4C3 /* Extras.swift in Sources */,
 				8933C7901EB5B82D000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -532,6 +553,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7EBF1FAC61860000E4C3 /* Internals.swift in Sources */,
+				F70C7EBE1FAC61860000E4C3 /* Extras.swift in Sources */,
+				F70C7EC01FAC61860000E4C3 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,6 +563,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7EC21FAC61870000E4C3 /* Internals.swift in Sources */,
+				F70C7EC11FAC61870000E4C3 /* Extras.swift in Sources */,
+				F70C7EC31FAC61870000E4C3 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +573,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7EBC1FAC61860000E4C3 /* Internals.swift in Sources */,
+				F70C7EBB1FAC61860000E4C3 /* Extras.swift in Sources */,
+				F70C7EBD1FAC61860000E4C3 /* Starburst.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +583,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7EC91FAC61880000E4C3 /* Starburst.swift in Sources */,
+				F70C7EC81FAC61880000E4C3 /* Internals.swift in Sources */,
+				F70C7EC71FAC61880000E4C3 /* Extras.swift in Sources */,
 				8933C78F1EB5B82C000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -561,6 +594,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F70C7ECC1FAC61890000E4C3 /* Starburst.swift in Sources */,
+				F70C7ECB1FAC61890000E4C3 /* Internals.swift in Sources */,
+				F70C7ECA1FAC61890000E4C3 /* Extras.swift in Sources */,
 				8933C78E1EB5B82C000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -938,6 +974,7 @@
 		DD7502831C68FCFC006590AF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -956,6 +993,7 @@
 		DD7502841C68FCFC006590AF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -975,6 +1013,7 @@
 		DD7502961C690C7A006590AF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/tvOS",
@@ -991,6 +1030,7 @@
 		DD7502971C690C7A006590AF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/tvOS",
