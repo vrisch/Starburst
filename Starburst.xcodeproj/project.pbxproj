@@ -34,13 +34,6 @@
 		F70C7ECA1FAC61890000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
 		F70C7ECB1FAC61890000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
 		F70C7ECC1FAC61890000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
-		F72B5ADF1F56996C0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
-		F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F72B5ADE1F56996C0031CAD9 /* Orbit.framework */; };
-		F7F721351F5E8DAA00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721341F5E8DAA00EA2877 /* Orbit.framework */; };
-		F7F721371F5E8DBB00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721361F5E8DBB00EA2877 /* Orbit.framework */; };
-		F7F721391F5E8DCE00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721381F5E8DCE00EA2877 /* Orbit.framework */; };
-		F7F7213A1F5E8DE900EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721341F5E8DAA00EA2877 /* Orbit.framework */; };
-		F7F7213B1F5E8DFB00EA2877 /* Orbit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7F721381F5E8DCE00EA2877 /* Orbit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,10 +76,6 @@
 		DD75028D1C690C7A006590AF /* Starburst-tvOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Starburst-tvOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F70C7E8D1FAC55520000E4C3 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		F72B5ADB1F5697AD0031CAD9 /* Cartfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
-		F72B5ADE1F56996C0031CAD9 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/iOS/Orbit.framework; sourceTree = "<group>"; };
-		F7F721341F5E8DAA00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/Mac/Orbit.framework; sourceTree = "<group>"; };
-		F7F721361F5E8DBB00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/watchOS/Orbit.framework; sourceTree = "<group>"; };
-		F7F721381F5E8DCE00EA2877 /* Orbit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Orbit.framework; path = Carthage/Build/tvOS/Orbit.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,7 +83,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F72B5ADF1F56996C0031CAD9 /* Orbit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,7 +90,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F72B5AE01F56B72E0031CAD9 /* Orbit.framework in Frameworks */,
 				52D6D9871BEFF229002C0205 /* Starburst.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,7 +98,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F721371F5E8DBB00EA2877 /* Orbit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,7 +105,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F721391F5E8DCE00EA2877 /* Orbit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,7 +112,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F721351F5E8DAA00EA2877 /* Orbit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,7 +119,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F7213A1F5E8DE900EA2877 /* Orbit.framework in Frameworks */,
 				DD7502881C68FEDE006590AF /* Starburst.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,7 +127,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F7213B1F5E8DFB00EA2877 /* Orbit.framework in Frameworks */,
 				DD7502921C690C7A006590AF /* Starburst.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -226,10 +208,6 @@
 		F72B5ADD1F56996C0031CAD9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F7F721381F5E8DCE00EA2877 /* Orbit.framework */,
-				F7F721361F5E8DBB00EA2877 /* Orbit.framework */,
-				F7F721341F5E8DAA00EA2877 /* Orbit.framework */,
-				F72B5ADE1F56996C0031CAD9 /* Orbit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -293,7 +271,6 @@
 				52D6D9821BEFF229002C0205 /* Sources */,
 				52D6D9831BEFF229002C0205 /* Frameworks */,
 				52D6D9841BEFF229002C0205 /* Resources */,
-				F72B5AE11F56B7D00031CAD9 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -509,23 +486,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		F72B5AE11F56B7D00031CAD9 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/iOS/Orbit.framework",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		52D6D9771BEFF229002C0205 /* Sources */ = {
