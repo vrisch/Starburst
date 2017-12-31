@@ -1,10 +1,4 @@
-//
-//  Extras.swift
-//  Starburst
-//
-//  Created by Magnus on 2017-10-14.
-//  Copyright © 2017 Starburst. All rights reserved.
-//
+import Foundation
 
 public extension Reason {
     public var isSubscribed: Bool {

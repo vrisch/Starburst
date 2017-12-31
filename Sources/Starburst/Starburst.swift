@@ -1,13 +1,4 @@
-//
-//  Starburst.swift
-//  Starburst
-//
-//  Created by Magnus Nilsson on 2017-03-11.
-//  Copyright © 2017 Starburst. All rights reserved.
-//
-
 import Foundation
-import Orbit
 
 public protocol State {}
 public protocol Action {
@@ -40,25 +31,24 @@ public final class Store {
     
     public init() { }
     
-    public func add<S: State>(state: S) -> Disposables {
+    public func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
-        states.append(box)
+        weakStates.append { [weak box] in box }
         observers.forEach { try? $0.apply(state: state) }
-        return Disposables(block: { self.remove(state: box) })
+        return box
     }
 
-    public func add<A: Action>(reducer: @escaping Reducer<A>) -> Disposables {
+    public func add<A: Action>(reducer: @escaping Reducer<A>) -> Any {
         let box = ReducerBox(reducer: reducer)
-        reducers.append(box)
-        return Disposables(block: { self.remove(reducer: box) })
+        weakReducers.append { [weak box] in box }
+        return box
     }
 
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Disposables {
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
-        observers.append(box)
-        observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
+        weakObservers.append { [weak box] in box }
         states.forEach { try? $0.apply(observer: observer) }
-        return Disposables(block: { self.remove(observer: box) })
+        return box
     }
 
     public func dispatch<A: Action>(_ action: A) throws {
@@ -67,7 +57,17 @@ public final class Store {
         }
     }
 
-    var states: [StateBox] = []
-    var reducers: [ReducerBox] = []
-    var observers: [ObserverBox] = []
+    var states: [StateBox] {
+        return weakStates.map { $0() }.filter { $0 != nil }.map { $0! }
+    }
+    var reducers: [ReducerBox] {
+        return weakReducers.map { $0() }.filter { $0 != nil }.map { $0! }
+    }
+    var observers: [ObserverBox] {
+        return weakObservers.map { $0() }.filter { $0 != nil }.map { $0! }.sorted(by: { $0.priority.rawValue < $1.priority.rawValue })
+    }
+
+    private var weakStates: [() -> StateBox?] = []
+    private var weakReducers: [() -> ReducerBox?] = []
+    private var weakObservers: [() -> ObserverBox?] = []
 }

@@ -8,7 +8,6 @@
 
 import Foundation
 import XCTest
-import Orbit
 import Starburst
 
 struct CounterState: State {
@@ -50,7 +49,7 @@ func counterObserver(state: CounterState, reason: Reason) {
 }
 
 var mainStore = Store()
-var disposables = Disposables()
+var disposables: [Any] = []
 var globalCounter = 0
 var globalObserverCount = 0
 var globalReducerCount = 0
@@ -58,8 +57,8 @@ var globalReducerCount = 0
 class StarburstTests: XCTestCase {
     
     override func setUp() {
-        disposables.empty()
-        //        mainStore.reset()
+        disposables.removeAll()
+
         globalCounter = 0
         globalObserverCount = 0
         globalReducerCount = 0
@@ -93,7 +92,7 @@ class StarburstTests: XCTestCase {
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
         
-        disposables.empty()
+        disposables.removeAll()
         
         try mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
         XCTAssertEqual(globalCounter, 2)
@@ -200,7 +199,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(mainStore.count, 3)
         
-        disposables.empty()
+        disposables.removeAll()
         XCTAssertEqual(mainStore.count, 0)
     }
     
