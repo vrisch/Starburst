@@ -71,3 +71,5 @@ public final class Store {
     private var weakReducers: [() -> ReducerBox?] = []
     private var weakObservers: [() -> ObserverBox?] = []
 }
+
+public var mainStore = Store()
