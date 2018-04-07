@@ -65,13 +65,17 @@ final class ObserverBox {
     
     func apply<S: State>(state: S, reason: Reason) throws {
         guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, reason)
+        try DispatchQueue.main.sync {
+            try observer(state, reason)
+        }
     }
     
     func apply<S: State>(state: S) throws {
         guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, .subscribed)
+        try DispatchQueue.main.sync {
+            try observer(state, .subscribed)
+        }
     }
-    
+
     private var box: Box
 }

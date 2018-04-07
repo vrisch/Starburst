@@ -52,8 +52,10 @@ public final class Store {
     }
 
     public func dispatch<A: Action>(_ action: A) throws {
-        try states.forEach {
-            try $0.apply(action: action, reducers: reducers, observers: observers)
+        try queue.sync {
+            try states.forEach {
+                try $0.apply(action: action, reducers: reducers, observers: observers)
+            }
         }
     }
 
@@ -70,6 +72,7 @@ public final class Store {
     private var weakStates: [() -> StateBox?] = []
     private var weakReducers: [() -> ReducerBox?] = []
     private var weakObservers: [() -> ObserverBox?] = []
+    private let queue = DispatchQueue(label: "Starburst")
 }
 
 public var mainStore = Store()
