@@ -41,7 +41,9 @@ final class StateBox {
             if var state : A.S = box.unwrap() {
                 try reducer.apply(state: &state, action: action) { newState in
                     box.wrap(value: newState)
-                    try observers.forEach { try $0.apply(state: newState, reason: .modified) }
+                    try observers.forEach {
+                        try $0.apply(state: newState, reason: .modified)
+                    }
                 }
             }
         }
@@ -49,7 +51,9 @@ final class StateBox {
     
     func apply<S: State>(observer: Observer<S>) throws {
         guard let state: S = box.unwrap() else { return }
-        try observer(state, .subscribed)
+        try DispatchQueue.main.sync {
+            try observer(state, .subscribed)
+        }
     }
     
     private var box: Box
