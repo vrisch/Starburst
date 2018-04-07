@@ -52,8 +52,8 @@ public final class Store {
     }
 
     public func dispatch<A: Action>(_ action: A) throws {
-        try queue.sync {
-            try states.forEach {
+       queue.async { [states, reducers, observers] in
+            try? states.forEach {
                 try $0.apply(action: action, reducers: reducers, observers: observers)
             }
         }
