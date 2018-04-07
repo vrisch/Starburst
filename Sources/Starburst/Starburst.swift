@@ -34,7 +34,9 @@ public final class Store {
     public func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
         weakStates.append { [weak box] in box }
-        observers.forEach { try? $0.apply(state: state) }
+        queue.async { [observers] in
+            observers.forEach { try? $0.apply(state: state) }
+        }
         return box
     }
 
@@ -47,7 +49,9 @@ public final class Store {
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
         weakObservers.append { [weak box] in box }
-        states.forEach { try? $0.apply(observer: observer) }
+        queue.async { [states] in
+            states.forEach { try? $0.apply(observer: observer) }
+        }
         return box
     }
 

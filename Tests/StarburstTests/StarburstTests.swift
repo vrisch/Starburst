@@ -48,7 +48,6 @@ func counterObserver(state: CounterState, reason: Reason) {
     globalCounter = state.counter
 }
 
-var mainStore = Store()
 var disposables: [Any] = []
 var globalCounter = 0
 var globalObserverCount = 0
