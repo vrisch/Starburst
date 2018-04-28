@@ -24,12 +24,21 @@ public enum Priority: Int {
 }
 
 public final class Store {
-    
+
+    public init() { }
+
+    private var weakStates: [() -> StateBox?] = []
+    private var weakReducers: [() -> ReducerBox?] = []
+    private var weakObservers: [() -> ObserverBox?] = []
+}
+
+public var mainStore = Store()
+
+public extension Store {
+
     public var count: Int {
         return states.count + reducers.count + observers.count
     }
-    
-    public init() { }
     
     public func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
@@ -56,20 +65,29 @@ public final class Store {
             try $0.apply(action: action, reducers: reducers, observers: observers)
         }
     }
-    
-    var states: [StateBox] {
-        return weakStates.map { $0() }.filter { $0 != nil }.map { $0! }
-    }
-    var reducers: [ReducerBox] {
-        return weakReducers.map { $0() }.filter { $0 != nil }.map { $0! }
-    }
-    var observers: [ObserverBox] {
-        return weakObservers.map { $0() }.filter { $0 != nil }.map { $0! }.sorted(by: { $0.priority.rawValue < $1.priority.rawValue })
-    }
-    
-    private var weakStates: [() -> StateBox?] = []
-    private var weakReducers: [() -> ReducerBox?] = []
-    private var weakObservers: [() -> ObserverBox?] = []
 }
 
-public var mainStore = Store()
+public extension Reduction {
+    
+    public func map<T>(_ f: @escaping (S) -> T) -> Reduction<T> {
+        switch self {
+        case let .modified(a):
+            return .modified(newState: f(a))
+        case .unmodified:
+            return .unmodified
+        }
+    }
+}
+
+internal extension Store {
+    
+    internal var states: [StateBox] {
+        return weakStates.map { $0() }.filter { $0 != nil }.map { $0! }
+    }
+    internal var reducers: [ReducerBox] {
+        return weakReducers.map { $0() }.filter { $0 != nil }.map { $0! }
+    }
+    internal var observers: [ObserverBox] {
+        return weakObservers.map { $0() }.filter { $0 != nil }.map { $0! }.sorted(by: { $0.priority.rawValue < $1.priority.rawValue })
+    }
+}
