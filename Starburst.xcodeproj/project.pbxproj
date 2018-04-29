@@ -25,15 +25,6 @@
 		F70C7EC11FAC61870000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
 		F70C7EC21FAC61870000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
 		F70C7EC31FAC61870000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
-		F70C7EC41FAC61870000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
-		F70C7EC51FAC61870000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
-		F70C7EC61FAC61870000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
-		F70C7EC71FAC61880000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
-		F70C7EC81FAC61880000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
-		F70C7EC91FAC61880000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
-		F70C7ECA1FAC61890000E4C3 /* Extras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA51FA50D9E0017BA53 /* Extras.swift */; };
-		F70C7ECB1FAC61890000E4C3 /* Internals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA71FA50D9E0017BA53 /* Internals.swift */; };
-		F70C7ECC1FAC61890000E4C3 /* Starburst.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3086FDA61FA50D9E0017BA53 /* Starburst.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -510,9 +501,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F70C7EC61FAC61870000E4C3 /* Starburst.swift in Sources */,
-				F70C7EC51FAC61870000E4C3 /* Internals.swift in Sources */,
-				F70C7EC41FAC61870000E4C3 /* Extras.swift in Sources */,
 				8933C7901EB5B82D000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -551,9 +539,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F70C7EC91FAC61880000E4C3 /* Starburst.swift in Sources */,
-				F70C7EC81FAC61880000E4C3 /* Internals.swift in Sources */,
-				F70C7EC71FAC61880000E4C3 /* Extras.swift in Sources */,
 				8933C78F1EB5B82C000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -562,9 +547,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F70C7ECC1FAC61890000E4C3 /* Starburst.swift in Sources */,
-				F70C7ECB1FAC61890000E4C3 /* Internals.swift in Sources */,
-				F70C7ECA1FAC61890000E4C3 /* Extras.swift in Sources */,
 				8933C78E1EB5B82C000D00A4 /* StarburstTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
