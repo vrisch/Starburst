@@ -59,11 +59,15 @@ public extension Store {
         states.forEach { try? $0.apply(observer: observer) }
         return box
     }
-    
+
     public func dispatch<A: Action>(_ action: A) throws {
         try? states.forEach {
             try $0.apply(action: action, reducers: reducers, observers: observers)
         }
+    }
+
+    public func dispatchAll<A: Action>(_ actions: [A]) throws {
+        try actions.forEach { try dispatch($0) }
     }
 }
 
