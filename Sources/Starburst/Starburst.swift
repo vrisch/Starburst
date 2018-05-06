@@ -4,7 +4,7 @@ public protocol State {}
 public protocol Action {
     associatedtype S: State
 }
-public typealias Reducer<A: Action> = (_ state: inout A.S, _ action: A) throws -> Reduction<A.S>
+public typealias Reducer<A: Action> = (_ state: inout A.S, _ action: A) throws -> Reduction<A>
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
@@ -12,9 +12,11 @@ public enum Reason {
     case modified
 }
 
-public enum Reduction<S: State> {
+public enum Reduction<A: Action> {
     case unmodified
-    case modified(newState: S)
+    case modified(newState: A.S)
+    case effect(newState: A.S, action: A)
+    case effects(newState: A.S, actions: [A])
 }
 
 public enum Priority: Int {
@@ -61,25 +63,15 @@ public extension Store {
     }
 
     public func dispatch<A: Action>(_ action: A) throws {
-        try? states.forEach {
-            try $0.apply(action: action, reducers: reducers, observers: observers)
+        var effects: [A] = []
+        try states.forEach {
+            effects += try $0.apply(action: action, reducers: reducers, observers: observers)
         }
+        try dispatchAll(effects)
     }
 
     public func dispatchAll<A: Action>(_ actions: [A]) throws {
         try actions.forEach { try dispatch($0) }
-    }
-}
-
-public extension Reduction {
-    
-    public func map<T>(_ f: @escaping (S) -> T) -> Reduction<T> {
-        switch self {
-        case let .modified(a):
-            return .modified(newState: f(a))
-        case .unmodified:
-            return .unmodified
-        }
     }
 }
 
