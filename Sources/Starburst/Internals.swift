@@ -17,7 +17,7 @@ struct Box {
 }
 
 final class ReducerBox {
-    init<A: Action>(reducer: Reducer<A>) {
+    init<A: Action>(reducer: @escaping Reducer<A>) {
         box = Box(value: reducer)
     }
     
@@ -74,7 +74,7 @@ final class StateBox {
 final class ObserverBox {
     let priority: Priority
     
-    init<S: State>(priority: Priority, observer: Observer<S>) {
+    init<S: State>(priority: Priority, observer: @escaping Observer<S>) {
         self.priority = priority
         box = Box(value: observer)
     }
