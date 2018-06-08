@@ -8,6 +8,7 @@ public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> V
 public enum Reason {
     case subscribed
     case modified
+    case middleware
 }
 
 public enum Reduction<S: State> {

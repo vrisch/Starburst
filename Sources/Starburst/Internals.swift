@@ -82,7 +82,7 @@ final class StateBox {
                     if changes {
                         // Notify observers
                         try observers.forEach {
-                            try $0.apply(state: newState, reason: .modified)
+                            try $0.apply(state: newState, reason: .middleware)
                         }
                     }
                 }

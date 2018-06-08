@@ -17,6 +17,7 @@ extension Reason: CustomStringConvertible {
         switch self {
         case .subscribed: return "subscribed"
         case .modified: return "modified"
+        case .middleware: return "middleware"
         }
     }
 }
