@@ -85,7 +85,7 @@ public extension Store {
         try actions.forEach { try dispatch($0) }
     }
 
-    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval) throws -> Any {
+    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
         timerSource.setEventHandler {
