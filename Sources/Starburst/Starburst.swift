@@ -1,10 +1,8 @@
 import Foundation
 
 public protocol State {}
-public protocol Action {
-    associatedtype S: State
-}
-public typealias Reducer<A: Action> = (_ state: inout A.S, _ action: A) throws -> Reduction<A>
+public protocol Action {}
+public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
@@ -12,11 +10,11 @@ public enum Reason {
     case modified
 }
 
-public enum Reduction<A: Action> {
+public enum Reduction<S: State> {
     case unmodified
-    case modified(newState: A.S)
-    case effect(newState: A.S, action: A)
-    case effects(newState: A.S, actions: [A])
+    case modified(newState: S)
+    case effect(newState: S, action: Action)
+    case effects(newState: S, actions: [Action])
 }
 
 public enum Priority: Int {
@@ -25,12 +23,18 @@ public enum Priority: Int {
     case low = 50
 }
 
+public enum Middleware {
+    case action((Action) throws -> Void)
+    case state((State) throws -> State?)
+}
+
 public final class Store {
 
     public init() { }
 
     private var weakStates: [() -> StateBox?] = []
     private var weakReducers: [() -> ReducerBox?] = []
+    private var weakMiddlewares: [() -> MiddlewareBox?] = []
     private var weakObservers: [() -> ObserverBox?] = []
 }
 
@@ -49,12 +53,18 @@ public extension Store {
         return box
     }
     
-    public func add<A: Action>(reducer: @escaping Reducer<A>) -> Any {
+    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
         let box = ReducerBox(reducer: reducer)
         weakReducers.append { [weak box] in box }
         return box
     }
-    
+
+    public func add(middleware: Middleware) -> Any {
+        let box = MiddlewareBox(middleware: middleware)
+        weakMiddlewares.append { [weak box] in box }
+        return box
+    }
+
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
         weakObservers.append { [weak box] in box }
@@ -62,16 +72,27 @@ public extension Store {
         return box
     }
 
-    public func dispatch<A: Action>(_ action: A) throws {
-        var effects: [A] = []
-        try states.forEach {
-            effects += try $0.apply(action: action, reducers: reducers, observers: observers)
+    public func dispatch(_ action: Action) throws {
+        try middlewares.forEach { try $0.apply(action: action) }
+        var effects: [Action] = []
+        try states.forEach { state in
+            effects += try state.apply(action: action, reducers: reducers, observers: observers, middlewares: middlewares)
         }
         try dispatchAll(effects)
     }
 
-    public func dispatchAll<A: Action>(_ actions: [A]) throws {
+    public func dispatchAll(_ actions: [Action]) throws {
         try actions.forEach { try dispatch($0) }
+    }
+
+    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval) throws -> Any {
+        let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
+        timerSource.setEventHandler {
+            try! mainStore.dispatch(action)
+        }
+        timerSource.resume()
+        return timerSource
     }
 }
 
@@ -82,6 +103,9 @@ internal extension Store {
     }
     internal var reducers: [ReducerBox] {
         return weakReducers.map { $0() }.filter { $0 != nil }.map { $0! }
+    }
+    internal var middlewares: [MiddlewareBox] {
+        return weakMiddlewares.map { $0() }.filter { $0 != nil }.map { $0! }
     }
     internal var observers: [ObserverBox] {
         return weakObservers.map { $0() }.filter { $0 != nil }.map { $0! }.sorted(by: { $0.priority.rawValue < $1.priority.rawValue })

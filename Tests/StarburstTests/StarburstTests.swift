@@ -15,8 +15,6 @@ struct CounterState: State {
 }
 
 enum CounterAction: Action {
-    typealias S = CounterState
-
     case increase
     case decrease
     case nothing

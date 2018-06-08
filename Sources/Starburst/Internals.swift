@@ -1,11 +1,11 @@
 import Foundation
 
-struct Box {
+final class Box {
     init<T>(value: T) {
         self.value = value
     }
     
-    mutating func wrap<T>(value: T) {
+    func wrap<T>(value: T) {
         self.value = value
     }
     
@@ -17,50 +17,82 @@ struct Box {
 }
 
 final class ReducerBox {
-    init<A: Action>(reducer: @escaping Reducer<A>) {
+    init<S: State, A: Action>(reducer: @escaping Reducer<S, A>) {
         box = Box(value: reducer)
+        perform = { box, state, action, observe in
+            guard let reducer: Reducer<S, A> = box.unwrap() else { return [] }
+            guard var state = state as? S else { return [] }
+            guard let action = action as? A else { return [] }
+            
+            var effects: [Action] = []
+            switch try reducer(&state, action) {
+            case .unmodified:
+                break
+            case let .modified(newState):
+                try observe(newState)
+            case let .effect(newState, action):
+                try observe(newState)
+                effects.append(action)
+            case let .effects(newState, actions):
+                try observe(newState)
+                effects += actions
+            }
+            return effects
+        }
     }
     
-    func apply<A: Action>(state: inout A.S, action: A, observe: (A.S) throws -> Void) throws -> [A] {
-        guard let reducer: Reducer<A> = box.unwrap() else { return [] }
-        
-        var effects: [A] = []
-        switch try reducer(&state, action) {
-        case .unmodified:
-            break
-        case let .modified(newState):
-            try observe(newState)
-        case let .effect(newState, action):
-            try observe(newState)
-            effects.append(action)
-        case let .effects(newState, actions):
-            try observe(newState)
-            effects += actions
-        }
-        return effects
+    func apply(state: State, action: Action, observe: (State) throws -> Void) throws -> [Action] {
+        return try perform(box, state, action, observe)
     }
     
     private let box: Box
+    private let perform: (Box, State, Action, (State) throws -> Void) throws -> [Action]
 }
 
 final class StateBox {
     init<S: State>(state: S) {
         box = Box(value: state)
-    }
-    
-    func apply<A: Action>(action: A, reducers: [ReducerBox], observers: [ObserverBox]) throws -> [A] {
-        var effects: [A] = []
-        for reducer in reducers {
-            if var state : A.S = box.unwrap() {
-                effects += try reducer.apply(state: &state, action: action) { newState in
+        perform = { box, action, reducers, observers, middlewares in
+            guard let state: S = box.unwrap() else { return [] }
+            
+            var effects: [Action] = []
+            for reducer in reducers {
+                effects += try reducer.apply(state: state, action: action) { newState in
+                    guard var newState = newState as? S else { return }
+                    
+                    // State has changed
                     box.wrap(value: newState)
+                    
+                    // Notify observers
                     try observers.forEach {
                         try $0.apply(state: newState, reason: .modified)
                     }
+                    
+                    // Notify middlewares
+                    var changes = false
+                    try middlewares.forEach {
+                        if let state = try $0.apply(state: newState) as? S {
+                            // State has changed again
+                            box.wrap(value: state)
+                            newState = state
+                            changes = true
+                        }
+                    }
+
+                    if changes {
+                        // Notify observers
+                        try observers.forEach {
+                            try $0.apply(state: newState, reason: .modified)
+                        }
+                    }
                 }
             }
+            return effects
         }
-        return effects
+    }
+    
+    func apply(action: Action, reducers: [ReducerBox], observers: [ObserverBox], middlewares: [MiddlewareBox]) throws -> [Action] {
+        return try perform(box, action, reducers, observers, middlewares)
     }
     
     func apply<S: State>(observer: Observer<S>) throws {
@@ -68,6 +100,30 @@ final class StateBox {
         try observer(state, .subscribed)
     }
     
+    private var box: Box
+    private var perform: (Box, Action, [ReducerBox], [ObserverBox], [MiddlewareBox]) throws -> [Action]
+}
+
+final class MiddlewareBox {
+    init(middleware: Middleware) {
+        box = Box(value: middleware)
+    }
+    
+    func apply(action: Action) throws {
+        guard let middleware: Middleware = box.unwrap() else { return }
+        if case let .action(f) = middleware {
+            try f(action)
+        }
+    }
+    
+    func apply(state: State) throws -> State? {
+        guard let middleware: Middleware = box.unwrap() else { return nil }
+        if case let .state(f) = middleware {
+            return try f(state)
+        }
+        return nil
+    }
+
     private var box: Box
 }
 
@@ -88,6 +144,6 @@ final class ObserverBox {
         guard let observer: Observer<S> = box.unwrap() else { return }
         try observer(state, .subscribed)
     }
-
+    
     private var box: Box
 }
