@@ -78,7 +78,7 @@ final class StateBox {
                             changes = true
                         }
                     }
-
+                    
                     if changes {
                         // Notify observers
                         try observers.forEach {
@@ -123,7 +123,7 @@ final class MiddlewareBox {
         }
         return nil
     }
-
+    
     private var box: Box
 }
 
@@ -147,3 +147,88 @@ final class ObserverBox {
     
     private var box: Box
 }
+/*
+final class Unit<S: State, A: Action> {
+    let states: () -> [S]
+    let update: (Int, S) -> Void
+    let reducers: () -> [Reducer<S, A>]
+    let observers: () -> [Observer<S>]
+    let middlewares: () -> [Middleware]
+    
+    init(states: @escaping () -> [S], update: @escaping (Int, S) -> Void, reducers: @escaping () -> [Reducer<S, A>], observers: @escaping () -> [Observer<S>], middlewares: @escaping () -> [Middleware]) {
+        self.states = states
+        self.update = update
+        self.reducers = reducers
+        self.observers = observers
+        self.middlewares = middlewares
+    }
+
+    func dispatch(action: A) throws -> [Action] {
+        var effects: [Action] = []
+        try states().enumerated().forEach { offset, element in
+            var copy = element
+            for reducer in reducers() {
+                switch try reducer(&copy, action) {
+                case .unmodified:
+                    break
+                case let .modified(newState):
+                    try update(offset: offset, newState: newState)
+                case let .effect(newState, action):
+                    try update(offset: offset, newState: newState)
+                    effects.append(action)
+                case let .effects(newState, actions):
+                    try update(offset: offset, newState: newState)
+                    effects += actions
+                }
+            }
+        }
+        return effects
+    }
+    
+    func update(offset: Int, newState: S) throws {
+        // State has changed
+        update(offset, newState)
+
+        // Notify observers
+        try observers().forEach {
+            try $0(states()[offset], .modified)
+        }
+
+        // Notify middlewares
+        var changes = false
+        try middlewares().forEach {
+            if case let .state(f) = $0, let newState = try f(states()[offset]) as? S {
+                update(offset, newState)
+                changes = true
+            }
+        }
+        
+        if changes {
+            // Notify observers
+            try observers().forEach {
+                try $0(states()[offset], .middleware)
+            }
+        }
+    }
+}
+
+final class UnitBox {
+    init<S: State, A: Action>(unit: Unit<S, A>) {
+        box = Box(value: unit)
+    }
+
+    private var box: Box
+}
+
+final class Storage {
+    private let units: [UnitBox] = []
+    
+    public func add<S: State>(state: S) -> Any {
+        let box = StateBox(state: state)
+        weakStates.append { [weak box] in box }
+        observers.forEach { try? $0.apply(state: state) }
+        return box
+    }
+
+}
+*/
