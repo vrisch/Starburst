@@ -13,13 +13,15 @@ public extension Reason {
 
 public struct ErrorState: State {
     public var errors: [Error] = []
+    
+    public init() {}
 }
 
 public enum ErrorActions: Action {
     case append(Error)
     case clear
 
-    static func reduce(state: inout ErrorState, action: ErrorActions) throws -> Reduction<ErrorState> {
+    public static func reduce(state: inout ErrorState, action: ErrorActions) throws -> Reduction<ErrorState> {
         switch action {
         case let .append(error):
             state.errors.append(error)
