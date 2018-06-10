@@ -11,6 +11,46 @@ public extension Reason {
     }
 }
 
+public struct ErrorState: State {
+    public var errors: [Error] = []
+}
+
+public enum ErrorActions: Action {
+    case append(Error)
+    case clear
+
+    static func reduce(state: inout ErrorState, action: ErrorActions) throws -> Reduction<ErrorState> {
+        switch action {
+        case let .append(error):
+            state.errors.append(error)
+        case .clear:
+            state.errors.removeAll()
+        }
+        return .modified(newState: state)
+    }
+}
+
+public extension Store {
+    
+    public func nonThrowingDispatch(_ action: Action) {
+        do {
+            try dispatch(action)
+        } catch let error {
+            try! dispatch(ErrorActions.append(error))
+        }
+    }
+
+    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
+        let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
+        timerSource.setEventHandler { [weak self] in
+            self?.nonThrowingDispatch(action)
+        }
+        timerSource.resume()
+        return timerSource
+    }
+}
+
 extension Reason: CustomStringConvertible {
     
     public var description: String {
