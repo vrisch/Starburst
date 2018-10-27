@@ -1,11 +1,3 @@
-//
-//  StarburstTests.swift
-//  Starburst
-//
-//  Created by Vrisch on {TODAY}.
-//  Copyright © 2017 Starburst. All rights reserved.
-//
-
 import Foundation
 import XCTest
 import Starburst
@@ -25,7 +17,7 @@ enum Error: Swift.Error {
     case disaster
 }
 
-func counterReducer(state: inout CounterState, action: CounterAction) throws -> Reduction<CounterState> {
+func counterReducer(state: inout CounterState, action: CounterAction, context: Context) throws -> Reduction<CounterState> {
     globalReducerCount += 1
     switch action {
     case .increase:
