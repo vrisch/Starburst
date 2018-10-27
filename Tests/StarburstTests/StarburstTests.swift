@@ -17,7 +17,7 @@ enum Error: Swift.Error {
     case disaster
 }
 
-func counterReducer(state: inout CounterState, action: CounterAction, context: Context) throws -> Reduction<CounterState> {
+func counterReducer(state: inout CounterState, action: CounterAction) throws -> Reduction<CounterState> {
     globalReducerCount += 1
     switch action {
     case .increase:

@@ -3,6 +3,7 @@ import Foundation
 public protocol State {}
 public protocol Action {}
 public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A, _ context: Context) throws -> Reduction<S>
+public typealias SimpleReducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
@@ -25,6 +26,7 @@ public enum Priority: Int {
 }
 
 public struct Trace: Hashable {
+    private let id = UUID().uuidString
     public init() {}
 }
 
@@ -60,7 +62,15 @@ public extension Store {
         observers.forEach { try? $0.apply(state: state) }
         return box
     }
-    
+
+    public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
+        let box = ReducerBox { state, action, _ in
+            return try reducer(&state, action)
+        }
+        weakReducers.append { [weak box] in box }
+        return box
+    }
+
     public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
         let box = ReducerBox(reducer: reducer)
         weakReducers.append { [weak box] in box }
