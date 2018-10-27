@@ -13,26 +13,37 @@ public extension Reason {
 
 public struct ErrorState: State {
     public var errors: [Error] = []
-    
+    public var traceableErrors: [Trace: Error] = [:]
+
     public init() {}
 }
 
 public enum ErrorActions: Action {
     case append(Error)
     case clear
-
+    
     public static func reduce(state: inout ErrorState, action: ErrorActions, context: Context) throws -> Reduction<ErrorState> {
         switch action {
         case let .append(error):
             state.errors.append(error)
+            state.traceableErrors[context.trace] = error
         case .clear:
             state.errors.removeAll()
+            state.traceableErrors.removeAll()
         }
         return .modified(newState: state)
     }
 }
 
 public extension Store {
+    public func trace<S : State, Item>(trace: Trace, keyPath: KeyPath<S, [Trace: Item]>, observer: @escaping (Item) -> Void) -> Any {
+        return subscribe { (state: S, reason) in
+            guard case reason = Reason.modified else { return }
+            if let item = state[keyPath: keyPath][trace] {
+                observer(item)
+            }
+        }
+    }
     
     public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
@@ -57,7 +68,7 @@ extension Reason: CustomStringConvertible {
 }
 
 extension Store: CustomStringConvertible {
-
+    
     public var description: String {
         var result = "\(type(of: self)): {\n"
         states.forEach { result.append("\($0)\n") }
