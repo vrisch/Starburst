@@ -29,7 +29,7 @@ public struct Trace: Hashable {
 }
 
 public struct Context {
-    let trace: Trace
+    public let trace: Trace
 }
 
 public enum Middleware {
