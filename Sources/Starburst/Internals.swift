@@ -24,7 +24,7 @@ final class ReducerBox {
             guard var state = state as? S else { return [] }
             guard let action = action as? A else { return [] }
             
-            var effects: [Action] = []
+            var actions: [Action] = []
             switch try reducer(&state, action, context) {
             case .unmodified:
                 break
@@ -32,12 +32,16 @@ final class ReducerBox {
                 try observe(newState)
             case let .effect(newState, action):
                 try observe(newState)
-                effects.append(action)
-            case let .effects(newState, actions):
+                actions.append(action)
+            case let .effects(newState, acts):
                 try observe(newState)
-                effects += actions
+                actions += acts
+            case let .action(action):
+                actions.append(action)
+            case let .actions(acts):
+                actions += acts
             }
-            return effects
+            return actions
         }
     }
     

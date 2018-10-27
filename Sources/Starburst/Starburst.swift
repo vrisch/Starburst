@@ -17,6 +17,8 @@ public enum Reduction<S: State> {
     case modified(newState: S)
     case effect(newState: S, action: Action)
     case effects(newState: S, actions: [Action])
+    case action(Action)
+    case actions([Action])
 }
 
 public enum Priority: Int {
@@ -94,11 +96,11 @@ public extension Store {
         do {
             let context = Context(trace: trace)
             try middlewares.forEach { try $0.apply(action: action) }
-            var effects: [Action] = []
+            var actions: [Action] = []
             try states.forEach { state in
-                effects += try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
+                actions += try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
             }
-            dispatchAll(effects)
+            dispatchAll(actions)
         } catch let error {
             dispatch(ErrorActions.append(error))
         }
