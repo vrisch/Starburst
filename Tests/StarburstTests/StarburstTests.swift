@@ -50,6 +50,7 @@ var disposables: [Any] = []
 var globalCounter = 0
 var globalObserverCount = 0
 var globalReducerCount = 0
+var globalErrorCount = 0
 
 class StarburstTests: XCTestCase {
     
@@ -59,6 +60,7 @@ class StarburstTests: XCTestCase {
         globalCounter = 0
         globalObserverCount = 0
         globalReducerCount = 0
+        globalErrorCount = 0
     }
     
     func testImmutability() throws {
@@ -68,7 +70,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(reducer: counterReducer)
         ]
         XCTAssertEqual(state.counter, 0)
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(state.counter, 0)
         print("\(mainStore)")
     }
@@ -81,17 +83,17 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(mainStore.count, 3)
         XCTAssertEqual(globalCounter, 0)
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 2)
-        try mainStore.dispatch(CounterAction.nothing)
+        mainStore.dispatch(CounterAction.nothing)
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3) // Subscribe + 2 .increase actions
         
         disposables.removeAll()
         
-        try mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
+        mainStore.dispatch(CounterAction.increase) // Should have no effect since store is reset
         XCTAssertEqual(globalCounter, 2)
         XCTAssertEqual(globalObserverCount, 3)
         
@@ -107,7 +109,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(globalCounter, 0)
         XCTAssertEqual(globalObserverCount, 1) // Subscription
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
         XCTAssertEqual(globalReducerCount, 1)
@@ -122,7 +124,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(globalCounter, 0)
         XCTAssertEqual(globalObserverCount, 1) // Subscription
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
         XCTAssertEqual(globalReducerCount, 1)
@@ -137,7 +139,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(globalCounter, 0)
         XCTAssertEqual(globalObserverCount, 1) // Subscription
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
         XCTAssertEqual(globalReducerCount, 1)
@@ -152,7 +154,7 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(globalCounter, 0)
         XCTAssertEqual(globalObserverCount, 1) // Subscription
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
         XCTAssertEqual(globalReducerCount, 1)
@@ -169,21 +171,28 @@ class StarburstTests: XCTestCase {
         ]
         XCTAssertEqual(globalCounter, 0)
         XCTAssertEqual(globalObserverCount, 2) // Subscriptions
-        try mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalCounter, 1)
         
         XCTAssertEqual(globalReducerCount, 2)
     }
     
-    func testExceptions() {
+    func testErrors() {
         disposables += [
+            mainStore.add(state: ErrorState()),
+            mainStore.add(reducer: ErrorActions.reduce),
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
+            mainStore.subscribe { (state: ErrorState, reason: Reason) throws in
+                globalErrorCount = state.errors.count
+            },
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
-                try mainStore.dispatch(CounterAction.disaster)
+                guard case .modified = reason else { return }
+                mainStore.dispatch(CounterAction.disaster)
             },
         ]
-        XCTAssertThrowsError(try mainStore.dispatch(CounterAction.increase))
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalErrorCount, 1)
     }
     
     func testCount() {
@@ -191,7 +200,7 @@ class StarburstTests: XCTestCase {
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
             mainStore.subscribe { (state: CounterState, reason: Reason) throws in
-                try mainStore.dispatch(CounterAction.disaster)
+                mainStore.dispatch(CounterAction.disaster)
             },
         ]
         XCTAssertEqual(mainStore.count, 3)
@@ -208,7 +217,7 @@ class StarburstTests: XCTestCase {
         ("testReorderingORS", testReorderingORS),
         ("testReorderingOSR", testReorderingOSR),
         ("testMultipleStates", testMultipleStates),
-        ("testExceptions", testExceptions),
+        ("testExceptions", testErrors),
         ("testCount", testCount),
         ]
 }

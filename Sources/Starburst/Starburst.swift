@@ -30,7 +30,6 @@ public enum Middleware {
 }
 
 public final class Store {
-
     public init() { }
 
     private var weakStates: [() -> StateBox?] = []
@@ -73,17 +72,21 @@ public extension Store {
         return box
     }
 
-    public func dispatch(_ action: Action) throws {
-        try middlewares.forEach { try $0.apply(action: action) }
-        var effects: [Action] = []
-        try states.forEach { state in
-            effects += try state.apply(action: action, reducers: reducers, observers: observers, middlewares: middlewares)
+    public func dispatch(_ action: Action) {
+        do {
+            try middlewares.forEach { try $0.apply(action: action) }
+            var effects: [Action] = []
+            try states.forEach { state in
+                effects += try state.apply(action: action, reducers: reducers, observers: observers, middlewares: middlewares)
+            }
+            dispatchAll(effects)
+        } catch let error {
+            dispatch(ErrorActions.append(error))
         }
-        try dispatchAll(effects)
     }
 
-    public func dispatchAll(_ actions: [Action]) throws {
-        try actions.forEach { try dispatch($0) }
+    public func dispatchAll(_ actions: [Action]) {
+        actions.forEach { dispatch($0) }
     }
 }
 

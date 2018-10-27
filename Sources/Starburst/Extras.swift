@@ -34,19 +34,11 @@ public enum ErrorActions: Action {
 
 public extension Store {
     
-    public func nonThrowingDispatch(_ action: Action) {
-        do {
-            try dispatch(action)
-        } catch let error {
-            try! dispatch(ErrorActions.append(error))
-        }
-    }
-
     public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
         timerSource.setEventHandler { [weak self] in
-            self?.nonThrowingDispatch(action)
+            self?.dispatch(action)
         }
         timerSource.resume()
         return timerSource
@@ -75,4 +67,3 @@ extension Store: CustomStringConvertible {
         return result
     }
 }
-
