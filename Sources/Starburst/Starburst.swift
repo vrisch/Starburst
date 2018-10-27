@@ -24,6 +24,10 @@ public enum Priority: Int {
     case low = 50
 }
 
+public struct Trace: Hashable {
+    public init() {}
+}
+
 public enum Middleware {
     case action((Action) throws -> Void)
     case state((State) throws -> State?)
@@ -72,7 +76,7 @@ public extension Store {
         return box
     }
 
-    public func dispatch(_ action: Action) {
+    public func dispatch(_ action: Action, trace: Trace = Trace()) {
         do {
             try middlewares.forEach { try $0.apply(action: action) }
             var effects: [Action] = []
