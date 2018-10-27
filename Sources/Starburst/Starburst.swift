@@ -100,14 +100,14 @@ public extension Store {
             try states.forEach { state in
                 actions += try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
             }
-            dispatchAll(actions)
+            dispatchAll(actions, trace: trace)
         } catch let error {
             dispatch(ErrorActions.append(error))
         }
     }
 
-    public func dispatchAll(_ actions: [Action]) {
-        actions.forEach { dispatch($0) }
+    public func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
+        actions.forEach { dispatch($0, trace: trace) }
     }
 }
 
