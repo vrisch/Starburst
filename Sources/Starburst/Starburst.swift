@@ -44,8 +44,8 @@ public struct Context {
 }
 
 public enum Middleware<S: State> {
-    case action((Action) throws -> [Effect])
-    case state((S) throws -> [Effect])
+    case action((Action, Context) throws -> Effect)
+    case state((inout S, Context) throws -> Reduction<S>)
 }
 
 public final class Store {
@@ -130,7 +130,7 @@ public extension Store {
         var effects: [Effect] = []
         work.sync {
             middlewares.forEach { middleware in
-                effects += send { try middleware.apply(action: action) }
+                effects += send { try middleware.apply(action: action, context: context) }
             }
             states.forEach { state in
                 effects += send {
