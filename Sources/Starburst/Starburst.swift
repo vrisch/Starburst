@@ -19,6 +19,7 @@ public enum Effect {
     case dispatch(Action)
     case dispatchAll([Action])
     case other(() -> Void)
+    indirect case append([Effect])
 }
 
 public enum Reduction<S: State> {

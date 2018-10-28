@@ -186,6 +186,8 @@ extension Store {
                 mainStore.dispatchAll(actions)
             case let .other(block):
                 block()
+            case let .append(others):
+                process(others)
             }
         }
     }
