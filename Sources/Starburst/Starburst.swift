@@ -3,8 +3,10 @@ import Foundation
 public protocol State {}
 public protocol Action {}
 public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A, _ context: Context) throws -> Reduction<S>
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Effect
+
 public typealias SimpleReducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
-public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
+public typealias SimpleObserver<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
     case subscribed
@@ -12,13 +14,17 @@ public enum Reason {
     case middleware
 }
 
-public enum Reduction<S: State> {
-    case unmodified
-    case modified(newState: S)
-    case effect(newState: S, action: Action)
-    case effects(newState: S, actions: [Action])
+public enum Effect {
+    case none
     case action(Action)
     case actions([Action])
+}
+
+public enum Reduction<S: State> {
+    case unmodified
+    case effect(Effect)
+    case modified(newState: S)
+    case sideeffect(newState: S, effect: Effect)
 }
 
 public enum Priority: Int {
@@ -37,13 +43,14 @@ public struct Context {
 }
 
 public enum Middleware {
-    case action((Action) throws -> Void)
+    case action((Action) throws -> Effect)
     case state((State) throws -> State?)
 }
 
 public final class Store {
     public init() { }
-
+    
+    private let work = DispatchQueue(label: "Starburst")
     private var weakStates: [() -> StateBox?] = []
     private var weakReducers: [() -> ReducerBox?] = []
     private var weakMiddlewares: [() -> MiddlewareBox?] = []
@@ -53,59 +60,86 @@ public final class Store {
 public var mainStore = Store()
 
 public extension Store {
-
+    
     public var count: Int {
-        return states.count + reducers.count + observers.count
+        var count = 0
+        work.sync {
+            count = states.count + reducers.count + observers.count
+        }
+        return count
     }
     
     public func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
-        weakStates.append { [weak box] in box }
-        observers.forEach { try? $0.apply(state: state) }
+        work.sync {
+            weakStates.append { [weak box] in box }
+        }
+        var actions: [Action] = []
+        observers.forEach { observer in
+            actions += send { try observer.apply(state: state) }
+        }
+        dispatchAll(actions)
+        return box
+    }
+    
+    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
+        let box = ReducerBox(reducer: reducer)
+        work.sync {
+            weakReducers.append { [weak box] in box }
+        }
         return box
     }
 
     public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
-        let box = ReducerBox { state, action, _ in
+        return add(reducer: { state, action, _ in
             return try reducer(&state, action)
-        }
-        weakReducers.append { [weak box] in box }
-        return box
-    }
-
-    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
-        let box = ReducerBox(reducer: reducer)
-        weakReducers.append { [weak box] in box }
-        return box
+        })
     }
 
     public func add(middleware: Middleware) -> Any {
         let box = MiddlewareBox(middleware: middleware)
-        weakMiddlewares.append { [weak box] in box }
+        work.sync {
+            weakMiddlewares.append { [weak box] in box }
+        }
         return box
     }
-
+    
     public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
-        weakObservers.append { [weak box] in box }
-        states.forEach { try? $0.apply(observer: observer) }
+        work.sync {
+            weakObservers.append { [weak box] in box }
+        }
+        var actions: [Action] = []
+        states.forEach { state in
+            actions += send { try state.apply(observer: observer) }
+        }
+        dispatchAll(actions)
         return box
+    }
+    
+    public func subscribe<S: State>(observer: @escaping SimpleObserver<S>) -> Any {
+        return subscribe(observer: { (state: S, reason: Reason) throws -> Effect in
+            try observer(state, reason)
+            return .none
+        })
     }
 
     public func dispatch(_ action: Action, trace: Trace = Trace()) {
-        do {
-            let context = Context(trace: trace)
-            try middlewares.forEach { try $0.apply(action: action) }
-            var actions: [Action] = []
-            try states.forEach { state in
-                actions += try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
+        let context = Context(trace: trace)
+        var actions: [Action] = []
+        work.sync {
+            middlewares.forEach { middleware in
+                actions += send { try middleware.apply(action: action) }
             }
-            dispatchAll(actions, trace: trace)
-        } catch let error {
-            dispatch(ErrorActions.append(error))
+            states.forEach { state in
+                actions += send {
+                    try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
+                }
+            }
         }
+        dispatchAll(actions)
     }
-
+    
     public func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
         actions.forEach { dispatch($0, trace: trace) }
     }

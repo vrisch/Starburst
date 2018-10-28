@@ -30,16 +30,11 @@ final class ReducerBox {
                 break
             case let .modified(newState):
                 try observe(newState)
-            case let .effect(newState, action):
+            case let .sideeffect(newState, effect):
                 try observe(newState)
-                actions.append(action)
-            case let .effects(newState, acts):
-                try observe(newState)
-                actions += acts
-            case let .action(action):
-                actions.append(action)
-            case let .actions(acts):
-                actions += acts
+                actions += effect.actions
+            case let .effect(effect):
+                actions += effect.actions
             }
             return actions
         }
@@ -59,9 +54,9 @@ final class StateBox {
         perform = { box, action, context, reducers, observers, middlewares in
             guard let state: S = box.unwrap() else { return [] }
             
-            var effects: [Action] = []
+            var actions: [Action] = []
             for reducer in reducers {
-                effects += try reducer.apply(state: state, action: action, context: context) { newState in
+                actions += try reducer.apply(state: state, action: action, context: context) { newState in
                     guard var newState = newState as? S else { return }
                     
                     // State has changed
@@ -69,7 +64,7 @@ final class StateBox {
                     
                     // Notify observers
                     try observers.forEach {
-                        try $0.apply(state: newState, reason: .modified)
+                        actions += try $0.apply(state: newState, reason: .modified)
                     }
                     
                     // Notify middlewares
@@ -86,12 +81,12 @@ final class StateBox {
                     if changes {
                         // Notify observers
                         try observers.forEach {
-                            try $0.apply(state: newState, reason: .middleware)
+                            actions += try $0.apply(state: newState, reason: .middleware)
                         }
                     }
                 }
             }
-            return effects
+            return actions
         }
     }
 
@@ -99,9 +94,9 @@ final class StateBox {
         return try perform(box, action, context, reducers, observers, middlewares)
     }
 
-    func apply<S: State>(observer: Observer<S>) throws {
-        guard let state: S = box.unwrap() else { return }
-        try observer(state, .subscribed)
+    func apply<S: State>(observer: Observer<S>) throws -> [Action] {
+        guard let state: S = box.unwrap() else { return [] }
+        return try observer(state, .subscribed).actions
     }
     
     private var box: Box
@@ -113,11 +108,12 @@ final class MiddlewareBox {
         box = Box(value: middleware)
     }
     
-    func apply(action: Action) throws {
-        guard let middleware: Middleware = box.unwrap() else { return }
+    func apply(action: Action) throws -> [Action] {
+        guard let middleware: Middleware = box.unwrap() else { return [] }
         if case let .action(f) = middleware {
-            try f(action)
+            return try f(action).actions
         }
+        return []
     }
     
     func apply(state: State) throws -> State? {
@@ -136,18 +132,30 @@ final class ObserverBox {
     
     init<S: State>(priority: Priority, observer: @escaping Observer<S>) {
         self.priority = priority
-        box = Box(value: observer)
+        self.box = Box(value: observer)
     }
     
-    func apply<S: State>(state: S, reason: Reason) throws {
-        guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, reason)
+    func apply<S: State>(state: S, reason: Reason) throws -> [Action] {
+        guard let observer: Observer<S> = box.unwrap() else { return [] }
+        return try observer(state, reason).actions
     }
     
-    func apply<S: State>(state: S) throws {
-        guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, .subscribed)
+    func apply<S: State>(state: S) throws -> [Action] {
+        guard let observer: Observer<S> = box.unwrap() else { return [] }
+        return try observer(state, .subscribed).actions
     }
     
     private var box: Box
+}
+
+extension Store {
+    internal func send(block: () throws -> [Action]) -> [Action] {
+        var actions: [Action] = []
+        do {
+            actions += try block()
+        } catch let error {
+            actions.append(ErrorActions.append(error))
+        }
+        return actions
+    }
 }

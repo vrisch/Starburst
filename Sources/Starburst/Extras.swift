@@ -11,6 +11,16 @@ public extension Reason {
     }
 }
 
+public extension Effect {
+    public var actions: [Action] {
+        switch self {
+        case .none: return []
+        case let .action(action): return [action]
+        case let .actions(actions): return actions
+        }
+    }
+}
+
 public struct ErrorState: State {
     public var errors: [Error] = []
     public var traceableErrors: [Trace: Error] = [:]
@@ -22,7 +32,7 @@ public enum ErrorActions: Action {
     case append(Error)
     case clear
     
-    public static func reduce(state: inout ErrorState, action: ErrorActions, context: Context) throws -> Reduction<ErrorState> {
+    public static func reduce(state: inout ErrorState, action: ErrorActions, context: Context) -> Reduction<ErrorState> {
         switch action {
         case let .append(error):
             state.errors.append(error)
