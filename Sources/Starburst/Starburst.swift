@@ -69,13 +69,9 @@ public var mainStore = Store()
 public extension Store {
     
     public var count: Int {
-        var count = 0
-        work.sync {
-            count = states.count + reducers.count + observers.count
-        }
-        return count
+        return states.count + reducers.count + observers.count
     }
-    
+
     public func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
         work.sync {
