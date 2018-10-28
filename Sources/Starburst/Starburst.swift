@@ -44,7 +44,7 @@ public struct Context {
 }
 
 public struct Middleware {
-    public static func action<A: Action>(_ f: @escaping (A, Context) throws -> Effect) -> Middleware {
+    public static func action(_ f: @escaping (Action, Context) throws -> Effect) -> Middleware {
         return Middleware(box: MiddlewareBox(f))
     }
     public static func state<S: State>(_ f: @escaping (inout S, Context) throws -> Reduction<S>) -> Middleware {

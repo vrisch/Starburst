@@ -19,9 +19,9 @@ enum CounterAction: Action {
 }
 
 struct CounterMiddleware {
-    static func doubler(action: CounterAction, context: Context) -> Effect {
+    static func doubler(action: Action, context: Context) -> Effect {
         switch action {
-        case .increase: return .dispatch(CounterAction.double)
+        case CounterAction.increase: return .dispatch(CounterAction.double)
         default: return .none
         }
     }

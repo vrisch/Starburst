@@ -106,9 +106,9 @@ final class StateBox {
 }
 
 final class MiddlewareBox {
-    init<A: Action>(_ f: @escaping (A, Context) throws -> Effect) {
+    init(_ f: @escaping (Action, Context) throws -> Effect) {
         perform = { action, _, context in
-             guard let action = action as? A else { return (nil, .none) }
+             guard let action = action else { return (nil, .none) }
              return (nil, try f(action, context))
         }
     }
