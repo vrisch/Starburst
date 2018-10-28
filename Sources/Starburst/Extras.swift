@@ -11,16 +11,6 @@ public extension Reason {
     }
 }
 
-public extension Effect {
-    public var actions: [Action] {
-        switch self {
-        case .none: return []
-        case let .action(action): return [action]
-        case let .actions(actions): return actions
-        }
-    }
-}
-
 public struct ErrorState: State {
     public var errors: [Error] = []
     public var traceableErrors: [Trace: Error] = [:]
@@ -59,7 +49,7 @@ public extension Store {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
         timerSource.setEventHandler { [weak self] in
-            self?.dispatch(action)
+            _ = self?.dispatch(action)
         }
         timerSource.resume()
         return timerSource

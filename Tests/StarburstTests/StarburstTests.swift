@@ -178,9 +178,9 @@ class StarburstTests: XCTestCase {
             mainStore.subscribe { (state: ErrorState, reason: Reason) in
                 globalErrorCount = state.errors.count
             },
-            mainStore.subscribe { (state: CounterState, reason: Reason) -> Effect in
-                guard case .modified = reason else { return .none }
-                return .action(CounterAction.disaster)
+            mainStore.subscribe { (state: CounterState, reason: Reason) -> [Effect<CounterState>] in
+                guard case .modified = reason else { return [] }
+                return [.dispatch(CounterAction.disaster)]
             },
         ]
         mainStore.dispatch(CounterAction.increase)
@@ -191,8 +191,8 @@ class StarburstTests: XCTestCase {
         disposables += [
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
-            mainStore.subscribe { (state: CounterState, reason: Reason) -> Effect in
-                return .action(CounterAction.disaster)
+            mainStore.subscribe { (state: CounterState, reason: Reason) -> [Effect<CounterState>] in
+                return [.dispatch(CounterAction.disaster)]
             },
         ]
         XCTAssertEqual(mainStore.count, 3)

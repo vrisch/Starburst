@@ -3,7 +3,7 @@ import Foundation
 public protocol State {}
 public protocol Action {}
 public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A, _ context: Context) throws -> Reduction<S>
-public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Effect
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> [Effect<S>]
 
 public typealias SimpleReducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
 public typealias SimpleObserver<S: State> = (_ state: S, _ reason: Reason) throws -> Void
@@ -14,17 +14,17 @@ public enum Reason {
     case middleware
 }
 
-public enum Effect {
-    case none
-    case action(Action)
-    case actions([Action])
+public enum Effect<S: State> {
+    case dispatch(Action)
+    case add(state: S)
+    case subscribe(Observer<S>)
 }
 
 public enum Reduction<S: State> {
     case unmodified
-    case effect(Effect)
+    case effect(Effect<S>)
     case modified(newState: S)
-    case sideeffect(newState: S, effect: Effect)
+    case sideeffect(newState: S, effect: Effect<S>)
 }
 
 public enum Priority: Int {
@@ -42,9 +42,9 @@ public struct Context {
     public let trace: Trace
 }
 
-public enum Middleware {
-    case action((Action) throws -> Effect)
-    case state((State) throws -> State?)
+public enum Middleware<S: State> {
+    case action((Action) throws -> [Effect<S>])
+    case state((S) throws -> [Effect<S>])
 }
 
 public final class Store {
@@ -69,79 +69,83 @@ public extension Store {
         return count
     }
     
-    public func add<S: State>(state: S) -> Any {
+    public func add<S: State>(state: S) -> [Any] {
         let box = StateBox(state: state)
         work.sync {
             weakStates.append { [weak box] in box }
         }
-        var actions: [Action] = []
+        var effects: [EffectBox] = []
         observers.forEach { observer in
-            actions += send { try observer.apply(state: state) }
+            effects += send { try observer.apply(state: state) }
         }
-        dispatchAll(actions)
-        return box
+        var disposables: [Any] =  [box]
+        disposables += process(effects)
+        return disposables
     }
     
-    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
+    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> [Any] {
         let box = ReducerBox(reducer: reducer)
         work.sync {
             weakReducers.append { [weak box] in box }
         }
-        return box
+        return [box]
     }
 
-    public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
+    public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> [Any] {
         return add(reducer: { state, action, _ in
             return try reducer(&state, action)
         })
     }
 
-    public func add(middleware: Middleware) -> Any {
+    public func add<S: State>(middleware: Middleware<S>) -> [Any] {
         let box = MiddlewareBox(middleware: middleware)
         work.sync {
             weakMiddlewares.append { [weak box] in box }
         }
-        return box
+        return [box]
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
+    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> [Any] {
         let box = ObserverBox(priority: priority, observer: observer)
         work.sync {
             weakObservers.append { [weak box] in box }
         }
-        var actions: [Action] = []
+        var effects: [EffectBox] = []
         states.forEach { state in
-            actions += send { try state.apply(observer: observer) }
+            effects += send { try state.apply(observer: observer) }
         }
-        dispatchAll(actions)
-        return box
+        var disposables: [Any] =  [box]
+        disposables += process(effects)
+        return disposables
     }
     
-    public func subscribe<S: State>(observer: @escaping SimpleObserver<S>) -> Any {
-        return subscribe(observer: { (state: S, reason: Reason) throws -> Effect in
+    public func subscribe<S: State>(observer: @escaping SimpleObserver<S>) -> [Any] {
+        return subscribe(observer: { (state: S, reason: Reason) throws -> [Effect<S>] in
             try observer(state, reason)
-            return .none
+            return []
         })
     }
 
-    public func dispatch(_ action: Action, trace: Trace = Trace()) {
+    @discardableResult
+    public func dispatch(_ action: Action, trace: Trace = Trace()) -> [Any] {
         let context = Context(trace: trace)
-        var actions: [Action] = []
+        var effects: [EffectBox] = []
         work.sync {
             middlewares.forEach { middleware in
-                actions += send { try middleware.apply(action: action) }
+                effects += send { try middleware.apply(action: action) }
             }
             states.forEach { state in
-                actions += send {
+                effects += send {
                     try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
                 }
             }
         }
-        dispatchAll(actions)
+        return process(effects)
     }
     
-    public func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
-        actions.forEach { dispatch($0, trace: trace) }
+    @discardableResult
+    public func dispatchAll(_ actions: [Action], trace: Trace = Trace()) -> [Any] {
+        return actions.flatMap { dispatch($0, trace: trace) }
     }
 }
 
