@@ -106,38 +106,34 @@ final class StateBox {
 }
 
 final class MiddlewareBox {
-    init<S: State>(middleware: Middleware<S>) {
-        box = Box(value: middleware)
-        perform = { box, action, state, context in
-            guard let middleware: Middleware<S> = box.unwrap() else { return (nil, .none) }
-
-            switch middleware {
-            case let .action(f):
-                guard let action = action else { return (nil, .none) }
-                return (nil, try f(action, context))
-            case let .state(f):
-                guard var newState = state as? S else { return (nil, .none) }
-                switch try f(&newState, context) {
-                case .unmodified: return (nil, .none)
-                case let .effect(effect): return (nil, effect)
-                case let .modified(newState): return (newState, .none)
-                case let .sideeffect(newState, effect): return (newState, effect)
-                }
-            }
+    init<A: Action>(_ f: @escaping (A, Context) throws -> Effect) {
+        perform = { action, _, context in
+             guard let action = action as? A else { return (nil, .none) }
+             return (nil, try f(action, context))
+        }
+    }
+    init<S: State>(_ f: @escaping (inout S, Context) throws -> Reduction<S>) {
+        perform = { action, state, context in
+             guard var newState = state as? S else { return (nil, .none) }
+             switch try f(&newState, context) {
+             case .unmodified: return (nil, .none)
+             case let .effect(effect): return (nil, effect)
+             case let .modified(newState): return (newState, .none)
+             case let .sideeffect(newState, effect): return (newState, effect)
+             }
         }
     }
     
     func apply(action: Action, context: Context) throws -> Effect {
-        return try perform(box, action, nil, context).1
+        return try perform(action, nil, context).1
     }
 
     func apply<S: State>(state: S, context: Context) throws -> (S?, Effect) {
-        let result = try perform(box, nil, state, context)
+        let result = try perform(nil, state, context)
         return (result.0 as? S, result.1)
     }
 
-    private var box: Box
-    private var perform: (Box, Action?, State?, Context) throws -> (State?, Effect)
+    private var perform: (Action?, State?, Context) throws -> (State?, Effect)
 }
 
 final class ObserverBox {

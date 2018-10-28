@@ -43,9 +43,14 @@ public struct Context {
     public let trace: Trace
 }
 
-public enum Middleware<S: State> {
-    case action((Action, Context) throws -> Effect)
-    case state((inout S, Context) throws -> Reduction<S>)
+public struct Middleware {
+    public static func action<A: Action>(_ f: @escaping (A, Context) throws -> Effect) -> Middleware {
+        return Middleware(box: MiddlewareBox(f))
+    }
+    public static func state<S: State>(_ f: @escaping (inout S, Context) throws -> Reduction<S>) -> Middleware {
+        return Middleware(box: MiddlewareBox(f))
+    }
+    internal let box: MiddlewareBox
 }
 
 public final class Store {
@@ -90,15 +95,15 @@ public extension Store {
         }
         return box
     }
-
+    
     public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
         return add(reducer: { state, action, _ in
             return try reducer(&state, action)
         })
     }
-
-    public func add<S: State>(middleware: Middleware<S>) -> Any {
-        let box = MiddlewareBox(middleware: middleware)
+    
+    public func add(middleware: Middleware) -> Any {
+        let box = middleware.box
         work.sync {
             weakMiddlewares.append { [weak box] in box }
         }
@@ -124,7 +129,7 @@ public extension Store {
             return .none
         })
     }
-
+    
     public func dispatch(_ action: Action, trace: Trace = Trace()) {
         let context = Context(trace: trace)
         var effects: [Effect] = []
