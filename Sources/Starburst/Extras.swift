@@ -21,7 +21,7 @@ public enum ErrorActions: Action {
     case append(Error)
     case clear
 
-    public static func reduce(state: inout ErrorState, action: ErrorActions, context: Context) throws -> Reduction<ErrorState> {
+    public static func reduce(state: inout ErrorState, action: ErrorActions) throws -> Reduction<ErrorState> {
         switch action {
         case let .append(error):
             state.errors.append(error)

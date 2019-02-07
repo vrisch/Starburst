@@ -2,8 +2,7 @@ import Foundation
 
 public protocol State {}
 public protocol Action {}
-public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A, _ context: Context) throws -> Reduction<S>
-public typealias SimpleReducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
+public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
 public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
@@ -23,15 +22,6 @@ public enum Priority: Int {
     case high = 0
     case normal = 20
     case low = 50
-}
-
-public struct Trace: Hashable {
-    private let id = UUID().uuidString
-    public init() {}
-}
-
-public struct Context {
-    public let trace: Trace
 }
 
 public enum Middleware {
@@ -63,14 +53,6 @@ public extension Store {
         return box
     }
 
-    public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
-        let box = ReducerBox { state, action, _ in
-            return try reducer(&state, action)
-        }
-        weakReducers.append { [weak box] in box }
-        return box
-    }
-
     public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
         let box = ReducerBox(reducer: reducer)
         weakReducers.append { [weak box] in box }
@@ -90,13 +72,12 @@ public extension Store {
         return box
     }
 
-    public func dispatch(_ action: Action, trace: Trace = Trace()) {
+    public func dispatch(_ action: Action) {
         do {
-            let context = Context(trace: trace)
             try middlewares.forEach { try $0.apply(action: action) }
             var effects: [Action] = []
             try states.forEach { state in
-                effects += try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
+                effects += try state.apply(action: action, reducers: reducers, observers: observers, middlewares: middlewares)
             }
             dispatchAll(effects)
         } catch let error {
