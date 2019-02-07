@@ -24,9 +24,14 @@ public enum Priority: Int {
     case low = 50
 }
 
-public enum Middleware {
-    case action((Action) throws -> Void)
-    case state((State) throws -> State?)
+public struct Middleware {
+    public static func action(_ f: @escaping (Action) throws -> Void) -> Middleware {
+        return Middleware(box: MiddlewareBox(f))
+    }
+    public static func state<S: State>(_ f: @escaping (inout S) throws -> Reduction<S>) -> Middleware {
+        return Middleware(box: MiddlewareBox(f))
+    }
+    internal let box: MiddlewareBox
 }
 
 public final class Store {
@@ -60,7 +65,7 @@ public extension Store {
     }
 
     public func add(middleware: Middleware) -> Any {
-        let box = MiddlewareBox(middleware: middleware)
+        let box = middleware.box
         weakMiddlewares.append { [weak box] in box }
         return box
     }

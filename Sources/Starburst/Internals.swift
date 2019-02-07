@@ -71,7 +71,7 @@ final class StateBox {
                     // Notify middlewares
                     var changes = false
                     try middlewares.forEach {
-                        if let state = try $0.apply(state: newState) as? S {
+                        if let state = try $0.apply(state: newState) {
                             // State has changed again
                             box.wrap(value: state)
                             newState = state
@@ -103,7 +103,7 @@ final class StateBox {
     private var box: Box
     private var perform: (Box, Action, [ReducerBox], [ObserverBox], [MiddlewareBox]) throws -> [Action]
 }
-
+/*
 final class MiddlewareBox {
     init(middleware: Middleware) {
         box = Box(value: middleware)
@@ -125,6 +125,38 @@ final class MiddlewareBox {
     }
     
     private var box: Box
+}
+*/
+final class MiddlewareBox {
+    init(_ f: @escaping (Action) throws -> Void) {
+        perform = { action, _ in
+            guard let action = action else { return nil }
+            try f(action)
+            return nil
+        }
+    }
+    init<S: State>(_ f: @escaping (inout S) throws -> Reduction<S>) {
+        perform = { action, state in
+            guard var newState = state as? S else { return nil }
+            switch try f(&newState) {
+            case .unmodified: return nil
+            case let .effect(newState, _): return newState
+            case let .modified(newState): return newState
+            case let .effects(newState, _): return newState
+            }
+        }
+    }
+    
+    func apply(action: Action) throws {
+        _ = try perform(action, nil)
+    }
+    
+    func apply<S: State>(state: S) throws -> S? {
+        let result = try perform(nil, state)
+        return result as? S
+    }
+    
+    private var perform: (Action?, State?) throws -> State?
 }
 
 final class ObserverBox {
