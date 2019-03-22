@@ -57,7 +57,6 @@ public struct Middleware {
 public final class Store {
     public init() { }
     
-    private let work = DispatchQueue(label: "Starburst")
     private var weakStates: [() -> StateBox?] = []
     private var weakReducers: [() -> ReducerBox?] = []
     private var weakMiddlewares: [() -> MiddlewareBox?] = []
@@ -70,12 +69,10 @@ public extension Store {
     var count: Int {
         return states.count + reducers.count + observers.count
     }
-
+    
     func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
-        work.sync {
-            weakStates.append { [weak box] in box }
-        }
+        weakStates.append { [weak box] in box }
         var effects: [Effect] = []
         observers.forEach { observer in
             effects += send { try observer.apply(state: state) }
@@ -86,9 +83,7 @@ public extension Store {
     
     func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
         let box = ReducerBox(reducer: reducer)
-        work.sync {
-            weakReducers.append { [weak box] in box }
-        }
+        weakReducers.append { [weak box] in box }
         return box
     }
     
@@ -100,17 +95,13 @@ public extension Store {
     
     func add(middleware: Middleware) -> Any {
         let box = middleware.box
-        work.sync {
-            weakMiddlewares.append { [weak box] in box }
-        }
+        weakMiddlewares.append { [weak box] in box }
         return box
     }
     
     func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
-        work.sync {
-            weakObservers.append { [weak box] in box }
-        }
+        weakObservers.append { [weak box] in box }
         var effects: [Effect] = []
         states.forEach { state in
             effects += send { try state.apply(observer: observer) }
@@ -129,14 +120,12 @@ public extension Store {
     func dispatch(_ action: Action, trace: Trace = Trace()) {
         let context = Context(trace: trace)
         var effects: [Effect] = []
-        work.sync {
-            middlewares.forEach { middleware in
-                effects += send { try middleware.apply(action: action, context: context) }
-            }
-            states.forEach { state in
-                effects += send {
-                    try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
-                }
+        middlewares.forEach { middleware in
+            effects += send { try middleware.apply(action: action, context: context) }
+        }
+        states.forEach { state in
+            effects += send {
+                try state.apply(action: action, context: context, reducers: reducers, observers: observers, middlewares: middlewares)
             }
         }
         process(effects)
