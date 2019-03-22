@@ -69,8 +69,8 @@ public extension Store {
     var count: Int {
         return states.count + reducers.count + observers.count
     }
-    
-    func add<S: State>(state: S) -> Any {
+
+  func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
         weakStates.append { [weak box] in box }
         var effects: [Effect] = []
