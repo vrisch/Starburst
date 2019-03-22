@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
@@ -8,12 +8,8 @@ let package = Package(
             name: "Starburst",
             targets: ["Starburst"]),
         ],
-    dependencies: [
-        .package(url: "https://github.com/vrisch/Orbit.git", .branch("develop")),
-        ],
     targets: [
         .target(
-            name: "Starburst",
-            dependencies: ["Orbit"]),
+            name: "Starburst")
         ]
 )

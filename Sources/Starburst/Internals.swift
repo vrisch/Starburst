@@ -1,41 +1,11 @@
-//
-//  Internals.swift
-//  Starburst
-//
-//  Created by Magnus on 2017-07-22.
-//  Copyright © 2017 Starburst. All rights reserved.
-//
-
 import Foundation
-import Orbit
 
-extension Store {
-    
-    func remove(state: StateBox) {
-        if let idx = states.index(of: state) {
-            states.remove(at: idx)
-        }
-    }
-    
-    func remove(reducer: ReducerBox) {
-        if let idx = reducers.index(of: reducer) {
-            reducers.remove(at: idx)
-        }
-    }
-    
-    func remove(observer: ObserverBox) {
-        if let idx = observers.index(of: observer) {
-            observers.remove(at: idx)
-        }
-    }
-}
-
-struct Box {
+final class Box {
     init<T>(value: T) {
         self.value = value
     }
     
-    mutating func wrap<T>(value: T) {
+    func wrap<T>(value: T) {
         self.value = value
     }
     
@@ -47,272 +17,178 @@ struct Box {
 }
 
 final class ReducerBox {
-    let uuid = UUID()
-    
-    init<A: Action>(reducer: Reducer<A>) {
+    init<S: State, A: Action>(reducer: @escaping Reducer<S, A>) {
         box = Box(value: reducer)
+        perform = { box, state, action, context, observe in
+            guard let reducer: Reducer<S, A> = box.unwrap() else { return [] }
+            guard var state = state as? S else { return [] }
+            guard let action = action as? A else { return [] }
+            
+            var effects: [Effect] = []
+            switch try reducer(&state, action, context) {
+            case .unmodified:
+                break
+            case let .modified(newState):
+                try observe(newState)
+            case let .sideeffect(newState, effect):
+                try observe(newState)
+                effects += [effect]
+            case let .effect(effect):
+                effects += [effect]
+            }
+            return effects
+        }
     }
     
-    func apply<A: Action>(state: inout A.S, action: A, modified: (A.S) throws -> Void) throws {
-        guard let reducer: Reducer<A> = box.unwrap() else { return }
-        if case let .modified(newState) = try reducer(&state, action) {
-            try modified(newState)
-        }
+    func apply(state: State, action: Action, context: Context, observe: (State) throws -> Void) throws -> [Effect] {
+        return try perform(box, state, action, context, observe)
     }
     
     private let box: Box
+    private let perform: (Box, State, Action, Context, (State) throws -> Void) throws -> [Effect]
 }
 
 final class StateBox {
-    let uuid = UUID()
-    
     init<S: State>(state: S) {
         box = Box(value: state)
-    }
-    
-    func apply<A: Action>(action: A, reducers: [ReducerBox], observers: [ObserverBox]) throws {
-        for reducer in reducers {
-            if var state : A.S = box.unwrap() {
-                try reducer.apply(state: &state, action: action) { newState in
+        perform = { box, action, context, reducers, observers, middlewares in
+            guard let state: S = box.unwrap() else { return [] }
+            
+            var effects: [Effect] = []
+            for reducer in reducers {
+                effects += try reducer.apply(state: state, action: action, context: context) { newState in
+                    guard var newState = newState as? S else { return }
+                    
+                    // State has changed
                     box.wrap(value: newState)
-                    try observers.forEach { try $0.apply(state: newState, reason: .modified) }
+                    
+                    // Notify observers
+                    try observers.forEach {
+                        effects.append(try $0.apply(state: newState, reason: .modified))
+                    }
+                    
+                    // Notify middlewares
+                    var changes = false
+                    try middlewares.forEach {
+                        let result = try $0.apply(state: newState, context: context)
+                        if let state = result.0 {
+                            // State has changed again
+                            box.wrap(value: state)
+                            newState = state
+                            changes = true
+                        }
+                        effects.append(result.1)
+                    }
+                    
+                    if changes {
+                        // Notify observers
+                        try observers.forEach {
+                            effects.append(try $0.apply(state: newState, reason: .middleware))
+                        }
+                    }
                 }
             }
+            return effects
         }
     }
-    
-    func apply<S: State>(observer: Observer<S>) throws {
-        guard let state: S = box.unwrap() else { return }
-        try observer(state, .subscribed)
+
+    func apply(action: Action, context: Context, reducers: [ReducerBox], observers: [ObserverBox], middlewares: [MiddlewareBox]) throws -> [Effect] {
+        return try perform(box, action, context, reducers, observers, middlewares)
+    }
+
+    func apply<S: State>(observer: Observer<S>) throws -> Effect {
+        guard let state: S = box.unwrap() else { return .none }
+        return try observer(state, .subscribed)
     }
     
     private var box: Box
+    private var perform: (Box, Action, Context, [ReducerBox], [ObserverBox], [MiddlewareBox]) throws -> [Effect]
+}
+
+final class MiddlewareBox {
+    init(_ f: @escaping (Action, Context) throws -> Effect) {
+        perform = { action, _, context in
+             guard let action = action else { return (nil, .none) }
+             return (nil, try f(action, context))
+        }
+    }
+    init<S: State>(_ f: @escaping (inout S, Context) throws -> Reduction<S>) {
+        perform = { action, state, context in
+             guard var newState = state as? S else { return (nil, .none) }
+             switch try f(&newState, context) {
+             case .unmodified: return (nil, .none)
+             case let .effect(effect): return (nil, effect)
+             case let .modified(newState): return (newState, .none)
+             case let .sideeffect(newState, effect): return (newState, effect)
+             }
+        }
+    }
+    
+    func apply(action: Action, context: Context) throws -> Effect {
+        return try perform(action, nil, context).1
+    }
+
+    func apply<S: State>(state: S, context: Context) throws -> (S?, Effect) {
+        let result = try perform(nil, state, context)
+        return (result.0 as? S, result.1)
+    }
+
+    private var perform: (Action?, State?, Context) throws -> (State?, Effect)
 }
 
 final class ObserverBox {
     let priority: Priority
-    let uuid = UUID()
     
-    init<S: State>(priority: Priority, observer: Observer<S>) {
+    init<S: State>(priority: Priority, observer: @escaping Observer<S>) {
         self.priority = priority
-        box = Box(value: observer)
+        self.box = Box(value: observer)
     }
     
-    func apply<S: State>(state: S, reason: Reason) throws {
-        guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, reason)
+    func apply<S: State>(state: S, reason: Reason) throws -> Effect {
+        guard let observer: Observer<S> = box.unwrap() else { return .none }
+        return try observer(state, reason)
     }
     
-    func apply<S: State>(state: S) throws {
-        guard let observer: Observer<S> = box.unwrap() else { return }
-        try observer(state, .subscribed)
+    func apply<S: State>(state: S) throws -> Effect {
+        guard let observer: Observer<S> = box.unwrap() else { return .none }
+        return try observer(state, .subscribed)
     }
     
     private var box: Box
 }
 
-extension ReducerBox: Equatable {
-    
-    static func ==(lhs: ReducerBox, rhs: ReducerBox) -> Bool {
-        return lhs.uuid == rhs.uuid
+extension Store {
+    internal func send(block: () throws -> Effect) -> [Effect] {
+        return send {
+            return [try block()]
+        }
+    }
+
+    internal func send(block: () throws -> [Effect]) -> [Effect] {
+        var effects: [Effect] = []
+        do {
+            effects += try block()
+        } catch let error {
+            let effect: Effect = .dispatch(ErrorActions.append(error))
+            effects.append(effect)
+        }
+        return effects
     }
     
-}
-
-extension StateBox: Equatable {
-    
-    static func ==(lhs: StateBox, rhs: StateBox) -> Bool {
-        return lhs.uuid == rhs.uuid
+    internal func process(_ effects: [Effect]) {
+        effects.forEach { effect in
+            switch effect {
+            case .none:
+                break
+            case let .dispatch(action):
+                mainStore.dispatch(action)
+            case let .dispatchAll(actions):
+                mainStore.dispatchAll(actions)
+            case let .other(block):
+                block()
+            case let .append(others):
+                process(others)
+            }
+        }
     }
-    
 }
-
-extension ObserverBox: Equatable {
-    
-    static func ==(lhs: ObserverBox, rhs: ObserverBox) -> Bool {
-        return lhs.uuid == rhs.uuid
-    }
-    
-}
-
-/*
- internal struct AnyReducer<S: State> {
- let uuid = UUID()
- 
- init(_ reducer: @escaping Reducer<S>) {
- box = reducer
- }
- func reduce(state: inout S, action: S.A) throws -> Reduction<S> {
- return try box(&state, action)
- }
- private let box: (inout S, S.A) throws -> Reduction<S>
- }
- 
- internal struct AnyObserver<S: State>: Equatable {
- let uuid = UUID()
- let priority: Priority
- 
- init(_ priority: Priority, _ observer: @escaping Observer<S>) {
- self.priority = priority
- box = observer
- }
- func newState(state: S, reason: Reason) throws {
- try box(state, reason)
- }
- public static func ==(lhs: AnyObserver, rhs: AnyObserver) -> Bool {
- return lhs.uuid == rhs.uuid
- }
- private let box: (S, Reason) throws -> ()
- }
- 
- internal protocol Shelf: class, CustomStringConvertible {
- associatedtype S: State
- 
- var count: Int { get }
- 
- func add(state: S) -> Disposables
- func add(reducer: @escaping Reducer<S>) -> Disposables
- func dispatch(_ action: S.A) throws
- func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables
- }
- 
- internal struct AnyShelf: CustomStringConvertible {
- let uuid = UUID()
- 
- var count: Int { return countBox() }
- var description: String { return descriptionBox() }
- 
- init<S: Shelf>(_ shelf: S) {
- countBox = { return shelf.count }
- descriptionBox = { return shelf.description }
- addStateBox = { state in
- if let state = state as? S.S {
- return shelf.add(state: state)
- }
- return nil
- }
- addReducerBox = { reducer in
- if let reducer = reducer as? AnyReducer<S.S> {
- return shelf.add(reducer: reducer.reduce)
- }
- return nil
- }
- dispatchBox = { action in
- if let action = action as? S.S.A {
- try shelf.dispatch(action)
- }
- }
- subscribeBox = { observer in
- if let observer = observer as? AnyObserver<S.S> {
- return try shelf.subscribe(observer.priority, observer.newState)
- }
- return nil
- }
- }
- 
- func add<S>(state: S) -> Disposables? {
- return addStateBox(state)
- }
- 
- func add<S>(reducer: @escaping Reducer<S>) -> Disposables? {
- return addReducerBox(AnyReducer<S>(reducer))
- }
- 
- func dispatch(_ action: Action) throws {
- try dispatchBox(action)
- }
- 
- func subscribe<S: State>(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables? {
- return try subscribeBox(AnyObserver<S>(priority, observer))
- }
- 
- private let countBox: () -> Int
- private let descriptionBox: () -> String
- private let addStateBox: (Any) -> Disposables?
- private let addReducerBox: (Any) -> Disposables?
- private let dispatchBox: (Action) throws -> Void
- private let subscribeBox: (Any) throws -> Disposables?
- }
- 
- internal struct AnyState<S: State> {
- let uuid = UUID()
- var state: S
- 
- init(_ state: S) {
- self.state = state
- }
- }
- 
- internal class Storage<TS: State>: Shelf {
- typealias S = TS
- 
- var count: Int { return states.count + reducers.count + observers.count }
- 
- func add(state: S) -> Disposables {
- let any = AnyState<S>(state)
- states.append(any)
- return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
- }
- 
- func add(reducer: @escaping Reducer<S>) -> Disposables {
- let any = AnyReducer<S>(reducer)
- reducers.append(any)
- return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
- }
- 
- func dispatch(_ action: S.A) throws {
- try reducers.forEach { reducer in
- try states.enumerated().forEach {
- let (index, state) = $0
- var local = state.state
- let reduction = try reducer.reduce(state: &local, action: action)
- if case let .modified(newState) = reduction {
- states[index].state = newState
- try observers.forEach { try $0.newState(state: newState, reason: .modified) }
- } else if case let .modified2(newState, reason) = reduction {
- states[index].state = newState
- try observers.forEach { try $0.newState(state: newState, reason: reason) }
- }
- }
- }
- }
- 
- func subscribe(_ priority: Priority, _ observer: @escaping Observer<S>) throws -> Disposables {
- let any = AnyObserver<S>(priority, observer)
- observers.append(any)
- observers.sort(by: { $0.priority.rawValue < $1.priority.rawValue })
- try states.forEach { state in
- try observer(state.state, .subscribed)
- }
- return Disposables(block: { self.unsubscribe(uuid: any.uuid) })
- }
- 
- func unsubscribe(uuid: UUID) {
- observers.enumerated().forEach { let (index, any) = $0
- if any.uuid == uuid {
- observers.remove(at: index)
- }
- }
- reducers.enumerated().forEach { let (index, any) = $0
- if any.uuid == uuid {
- reducers.remove(at: index)
- }
- }
- states.enumerated().forEach { let (index, any) = $0
- if any.uuid == uuid {
- states.remove(at: index)
- }
- }
- }
- 
- private var states: [AnyState<S>] = []
- private var reducers: [AnyReducer<S>] = []
- private var observers: [AnyObserver<S>] = []
- }
- 
- extension Storage: CustomStringConvertible {
- public var description: String {
- return "\(type(of: self)): \(states.count) states, \(reducers.count) reducers, \(observers.count) observers"
- }
- }
- */
