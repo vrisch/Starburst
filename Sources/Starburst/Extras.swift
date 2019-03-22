@@ -1,11 +1,11 @@
 import Foundation
 
 public extension Reason {
-    public var isSubscribed: Bool {
+    var isSubscribed: Bool {
         guard case .subscribed = self else { return false }
         return true
     }
-    public var isModified: Bool {
+    var isModified: Bool {
         guard case .modified = self else { return false }
         return true
     }
@@ -36,7 +36,7 @@ public enum ErrorActions: Action {
 }
 
 public extension Store {
-    public func trace<S : State, Item>(trace: Trace, keyPath: KeyPath<S, [Trace: Item]>, observer: @escaping (Item) -> Void) -> Any {
+    func trace<S : State, Item>(trace: Trace, keyPath: KeyPath<S, [Trace: Item]>, observer: @escaping (Item) -> Void) -> Any {
         return subscribe { (state: S, reason) in
             guard case reason = Reason.modified else { return }
             if let item = state[keyPath: keyPath][trace] {
@@ -45,7 +45,7 @@ public extension Store {
         }
     }
     
-    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
+    func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
         timerSource.setEventHandler { [weak self] in

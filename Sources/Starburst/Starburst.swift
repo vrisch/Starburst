@@ -67,12 +67,11 @@ public final class Store {
 public var mainStore = Store()
 
 public extension Store {
-    
-    public var count: Int {
+    var count: Int {
         return states.count + reducers.count + observers.count
     }
 
-    public func add<S: State>(state: S) -> Any {
+    func add<S: State>(state: S) -> Any {
         let box = StateBox(state: state)
         work.sync {
             weakStates.append { [weak box] in box }
@@ -85,7 +84,7 @@ public extension Store {
         return box
     }
     
-    public func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
+    func add<S: State, A: Action>(reducer: @escaping Reducer<S, A>) -> Any {
         let box = ReducerBox(reducer: reducer)
         work.sync {
             weakReducers.append { [weak box] in box }
@@ -93,13 +92,13 @@ public extension Store {
         return box
     }
     
-    public func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
+    func add<S: State, A: Action>(reducer: @escaping SimpleReducer<S, A>) -> Any {
         return add(reducer: { state, action, _ in
             return try reducer(&state, action)
         })
     }
     
-    public func add(middleware: Middleware) -> Any {
+    func add(middleware: Middleware) -> Any {
         let box = middleware.box
         work.sync {
             weakMiddlewares.append { [weak box] in box }
@@ -107,7 +106,7 @@ public extension Store {
         return box
     }
     
-    public func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
+    func subscribe<S: State>(priority: Priority = .normal, observer: @escaping Observer<S>) -> Any {
         let box = ObserverBox(priority: priority, observer: observer)
         work.sync {
             weakObservers.append { [weak box] in box }
@@ -120,14 +119,14 @@ public extension Store {
         return box
     }
     
-    public func subscribe<S: State>(observer: @escaping SimpleObserver<S>) -> Any {
+    func subscribe<S: State>(observer: @escaping SimpleObserver<S>) -> Any {
         return subscribe(observer: { (state: S, reason: Reason) throws -> Effect in
             try observer(state, reason)
             return .none
         })
     }
     
-    public func dispatch(_ action: Action, trace: Trace = Trace()) {
+    func dispatch(_ action: Action, trace: Trace = Trace()) {
         let context = Context(trace: trace)
         var effects: [Effect] = []
         work.sync {
@@ -143,23 +142,23 @@ public extension Store {
         process(effects)
     }
     
-    public func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
+    func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
         actions.forEach { dispatch($0, trace: trace) }
     }
 }
 
 internal extension Store {
     
-    internal var states: [StateBox] {
+    var states: [StateBox] {
         return weakStates.map { $0() }.filter { $0 != nil }.map { $0! }
     }
-    internal var reducers: [ReducerBox] {
+    var reducers: [ReducerBox] {
         return weakReducers.map { $0() }.filter { $0 != nil }.map { $0! }
     }
-    internal var middlewares: [MiddlewareBox] {
+    var middlewares: [MiddlewareBox] {
         return weakMiddlewares.map { $0() }.filter { $0 != nil }.map { $0! }
     }
-    internal var observers: [ObserverBox] {
+    var observers: [ObserverBox] {
         return weakObservers.map { $0() }.filter { $0 != nil }.map { $0! }.sorted(by: { $0.priority.rawValue < $1.priority.rawValue })
     }
 }
