@@ -378,7 +378,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = Starburst;
 				TargetAttributes = {
 					52D6D97B1BEFF229002C0205 = {

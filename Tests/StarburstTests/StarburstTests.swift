@@ -7,9 +7,6 @@ struct CounterState: State {
     var counterCopy: Int = 0
 }
 
-struct AnotherState: State {
-}
-
 enum CounterAction: Action {
     case increase
     case decrease
@@ -200,12 +197,12 @@ class StarburstTests: XCTestCase {
             mainStore.add(reducer: ErrorActions.reduce),
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
-            mainStore.subscribe { (state: ErrorState, reason: Reason) in
+            mainStore.subscribe { (state: ErrorState, reason: Reason) throws in
                 globalErrorCount = state.errors.count
             },
-            mainStore.subscribe { (state: CounterState, reason: Reason) -> Effect in
-                guard case .modified = reason else { return .none }
-                return .dispatch(CounterAction.disaster)
+            mainStore.subscribe { (state: CounterState, reason: Reason) throws in
+                guard case .modified = reason else { return }
+                mainStore.dispatch(CounterAction.disaster)
             },
         ]
         mainStore.dispatch(CounterAction.increase)
@@ -216,12 +213,8 @@ class StarburstTests: XCTestCase {
         disposables += [
             mainStore.add(state: CounterState()),
             mainStore.add(reducer: counterReducer),
-            mainStore.subscribe { (state: CounterState, reason: Reason) -> Effect in
-                return .other({
-                    disposables += [
-                        mainStore.add(state: AnotherState())
-                    ]
-                })
+            mainStore.subscribe { (state: CounterState, reason: Reason) throws in
+                mainStore.dispatch(CounterAction.disaster)
             },
         ]
         XCTAssertEqual(mainStore.count, 4)
