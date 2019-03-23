@@ -4,13 +4,29 @@ import Starburst
 
 struct CounterState: State {
     var counter: Int = 0
+    var counterCopy: Int = 0
 }
 
 enum CounterAction: Action {
     case increase
     case decrease
+    case double
     case nothing
     case disaster
+}
+
+struct CounterMiddleware {
+    static func doubler(action: Action, context: Context) -> Effect {
+        switch action {
+        case CounterAction.increase: return .dispatch(CounterAction.double)
+        default: return .none
+        }
+    }
+
+    static func copier(state: inout CounterState, context: Context) -> Reduction<CounterState> {
+        state.counterCopy = state.counter
+        return .modified(newState: state)
+    }
 }
 
 enum Error: Swift.Error {
@@ -26,6 +42,9 @@ func counterReducer(state: inout CounterState, action: CounterAction) throws -> 
     case .decrease:
         state.counter -= 1
         return .modified(newState: state)
+    case .double:
+        state.counter *= 2
+        return .modified(newState: state)
     case .nothing:
         return .unmodified
     case .disaster:
@@ -36,10 +55,12 @@ func counterReducer(state: inout CounterState, action: CounterAction) throws -> 
 func counterObserver(state: CounterState, reason: Reason) {
     globalObserverCount += 1
     globalCounter = state.counter
+    globalCounterCopy = state.counterCopy
 }
 
 var disposables: [Any] = []
 var globalCounter = 0
+var globalCounterCopy = 0
 var globalObserverCount = 0
 var globalReducerCount = 0
 var globalErrorCount = 0
@@ -50,6 +71,7 @@ class StarburstTests: XCTestCase {
         disposables.removeAll()
 
         globalCounter = 0
+        globalCounterCopy = 0
         globalObserverCount = 0
         globalReducerCount = 0
         globalErrorCount = 0
@@ -186,7 +208,7 @@ class StarburstTests: XCTestCase {
         mainStore.dispatch(CounterAction.increase)
         XCTAssertEqual(globalErrorCount, 1)
     }
-    
+
     func testCount() {
         disposables += [
             mainStore.add(state: CounterState()),
@@ -195,12 +217,37 @@ class StarburstTests: XCTestCase {
                 mainStore.dispatch(CounterAction.disaster)
             },
         ]
-        XCTAssertEqual(mainStore.count, 3)
+        XCTAssertEqual(mainStore.count, 4)
         
         disposables.removeAll()
         XCTAssertEqual(mainStore.count, 0)
     }
-    
+
+    func testMiddlewareAction() {
+        disposables += [
+            mainStore.add(state: CounterState()),
+            mainStore.add(reducer: counterReducer),
+            mainStore.subscribe(observer: counterObserver),
+            mainStore.add(middleware: .action(CounterMiddleware.doubler)),
+        ]
+        mainStore.dispatch(CounterAction.increase) // 0 + 1 + double = 2
+        mainStore.dispatch(CounterAction.increase) // 2 + 1 + double = 6
+        XCTAssertEqual(globalCounter, 6)
+    }
+
+    func testMiddlewareState() {
+        disposables += [
+            mainStore.add(state: CounterState()),
+            mainStore.add(reducer: counterReducer),
+            mainStore.subscribe(observer: counterObserver),
+            mainStore.add(middleware: .state(CounterMiddleware.copier)),
+        ]
+        mainStore.dispatch(CounterAction.increase)
+        mainStore.dispatch(CounterAction.increase)
+        XCTAssertEqual(globalCounter, 2)
+        XCTAssertEqual(globalCounterCopy, 2)
+    }
+
     static var allTests = [
         ("testImmutability", testImmutability),
         ("testMutability", testMutability),

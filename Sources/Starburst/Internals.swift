@@ -77,12 +77,13 @@ final class StateBox {
                             newState = state
                             changes = true
                         }
+                        effects.append(result.1)
                     }
                     
                     if changes {
                         // Notify observers
                         try observers.forEach {
-                            try $0.apply(state: newState, reason: .middleware)
+                            effects.append(try $0.apply(state: newState, reason: .middleware))
                         }
                     }
                 }

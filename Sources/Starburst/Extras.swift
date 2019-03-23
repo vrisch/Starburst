@@ -1,11 +1,11 @@
 import Foundation
 
 public extension Reason {
-    public var isSubscribed: Bool {
+    var isSubscribed: Bool {
         guard case .subscribed = self else { return false }
         return true
     }
-    public var isModified: Bool {
+    var isModified: Bool {
         guard case .modified = self else { return false }
         return true
     }
@@ -33,7 +33,6 @@ public enum ErrorActions: Action {
 }
 
 public extension Store {
-    
     public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
@@ -57,7 +56,7 @@ extension Reason: CustomStringConvertible {
 }
 
 extension Store: CustomStringConvertible {
-
+    
     public var description: String {
         var result = "\(type(of: self)): {\n"
         states.forEach { result.append("\($0)\n") }

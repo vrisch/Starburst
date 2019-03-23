@@ -2,8 +2,11 @@ import Foundation
 
 public protocol State {}
 public protocol Action {}
-public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
-public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Void
+public typealias Reducer<S: State, A: Action> = (_ state: inout S, _ action: A, _ context: Context) throws -> Reduction<S>
+public typealias Observer<S: State> = (_ state: S, _ reason: Reason) throws -> Effect
+
+public typealias SimpleReducer<S: State, A: Action> = (_ state: inout S, _ action: A) throws -> Reduction<S>
+public typealias SimpleObserver<S: State> = (_ state: S, _ reason: Reason) throws -> Void
 
 public enum Reason {
     case subscribed
@@ -13,6 +16,7 @@ public enum Reason {
 
 public enum Reduction<S: State> {
     case unmodified
+    case effect(Effect)
     case modified(newState: S)
     case effect(newState: S, action: Action)
     case effects(newState: S, actions: [Action])
@@ -46,7 +50,6 @@ public final class Store {
 public var mainStore = Store()
 
 public extension Store {
-
     public var count: Int {
         return states.count + reducers.count + observers.count
     }
@@ -88,7 +91,13 @@ public extension Store {
         } catch let error {
             dispatch(ErrorActions.append(error))
         }
+        process(effects)
     }
+    
+    func dispatchAll(_ actions: [Action], trace: Trace = Trace()) {
+        actions.forEach { dispatch($0, trace: trace) }
+    }
+}
 
     public func dispatchAll(_ actions: [Action]) {
         actions.forEach { dispatch($0) }
