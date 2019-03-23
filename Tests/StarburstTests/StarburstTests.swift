@@ -16,14 +16,14 @@ enum CounterAction: Action {
 }
 
 struct CounterMiddleware {
-    static func doubler(action: Action, context: Context) -> Effect {
+    static func doubler(action: Action) -> [Action] {
         switch action {
-        case CounterAction.increase: return .dispatch(CounterAction.double)
-        default: return .none
+        case CounterAction.increase: return [CounterAction.double]
+        default: return []
         }
     }
 
-    static func copier(state: inout CounterState, context: Context) -> Reduction<CounterState> {
+    static func copier(state: inout CounterState) -> Reduction<CounterState> {
         state.counterCopy = state.counter
         return .modified(newState: state)
     }
@@ -217,7 +217,7 @@ class StarburstTests: XCTestCase {
                 mainStore.dispatch(CounterAction.disaster)
             },
         ]
-        XCTAssertEqual(mainStore.count, 4)
+        XCTAssertEqual(mainStore.count, 3)
         
         disposables.removeAll()
         XCTAssertEqual(mainStore.count, 0)

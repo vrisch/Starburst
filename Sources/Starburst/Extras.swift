@@ -33,7 +33,7 @@ public enum ErrorActions: Action {
 }
 
 public extension Store {
-    public func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
+    func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval =  .seconds(1)) -> Any {
         let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
         timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
         timerSource.setEventHandler { [weak self] in

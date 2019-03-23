@@ -77,14 +77,11 @@ final class StateBox {
                             newState = state
                             changes = true
                         }
-                        effects.append(result.1)
                     }
                     
                     if changes {
                         // Notify observers
-                        try observers.forEach {
-                            effects.append(try $0.apply(state: newState, reason: .middleware))
-                        }
+                        try observers.forEach { try $0.apply(state: newState, reason: .middleware) }
                     }
                 }
             }
@@ -129,35 +126,35 @@ final class MiddlewareBox {
 }
 */
 final class MiddlewareBox {
-    init(_ f: @escaping (Action) throws -> Void) {
+    init(_ f: @escaping (Action) throws -> [Action]) {
         perform = { action, _ in
-            guard let action = action else { return nil }
-            try f(action)
-            return nil
+            guard let action = action else { return (nil, nil) }
+            return (nil, try f(action))
         }
     }
     init<S: State>(_ f: @escaping (inout S) throws -> Reduction<S>) {
         perform = { action, state in
-            guard var newState = state as? S else { return nil }
+            guard var newState = state as? S else { return (nil, nil) }
             switch try f(&newState) {
-            case .unmodified: return nil
-            case let .effect(newState, _): return newState
-            case let .modified(newState): return newState
-            case let .effects(newState, _): return newState
+            case .unmodified: return (nil, nil)
+            case let .effect(newState, _): return (newState, nil)
+            case let .modified(newState): return (newState, nil)
+            case let .effects(newState, _): return (newState, nil)
             }
         }
     }
-    
-    func apply(action: Action) throws {
-        _ = try perform(action, nil)
+
+    func apply(action: Action) throws -> [Action] {
+        guard let actions = try perform(action, nil).1 else { return [] }
+        return actions
     }
-    
+
     func apply<S: State>(state: S) throws -> S? {
-        let result = try perform(nil, state)
-        return result as? S
+        guard let state = try perform(nil, state).0 as? S else { return nil }
+        return state
     }
     
-    private var perform: (Action?, State?) throws -> State?
+    private var perform: (Action?, State?) throws -> (State?, [Action]?)
 }
 
 final class ObserverBox {
