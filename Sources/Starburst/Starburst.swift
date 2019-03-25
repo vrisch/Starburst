@@ -94,6 +94,22 @@ public extension Store {
     func dispatchAll(_ actions: [Action]) {
         actions.forEach { dispatch($0) }
     }
+
+    func dispatchAfter(_ action: Action, interval: DispatchTimeInterval = .seconds(1)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + interval) {
+            self.dispatch(action)
+        }
+    }
+
+    func dispatchScheduled(_ action: Action, repeating: DispatchTimeInterval, leeway: DispatchTimeInterval = .seconds(1)) -> Any {
+        let timerSource = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+        timerSource.schedule(deadline: .now(), repeating: repeating, leeway: leeway)
+        timerSource.setEventHandler { [weak self] in
+            self?.dispatch(action)
+        }
+        timerSource.resume()
+        return timerSource
+    }
 }
 
 internal extension Store {
